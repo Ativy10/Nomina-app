@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <link rel="manifest" href="manifest.json">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nómina Pro - Configuración Persistente</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background-color: #f0f2f5; color: #1c1e21; max-width: 600px; margin: 0 auto; padding: 15px; }
+        .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); margin-bottom: 15px; }
+        h2, h3 { text-align: center; color: #1a73e8; margin-top: 0; }
+        button { width: 100%; padding: 14px; font-size: 16px; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; transition: 0.2s; margin-bottom: 10px; color: white; }
+        .btn-entrada { background-color: #28a745; }
+        .btn-salida { background-color: #dc3545; }
+        .btn-calcular { background-color: #1a73e8; margin-top: 15px; }
+        label { font-weight: bold; display: block; margin-top: 12px; font-size: 13px; color: #4b4f56; }
+        input, select { width: 100%; padding: 10px; margin-top: 5px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; font-size: 15px; }
+        .resultado { background-color: #fff; padding: 20px; border-radius: 10px; margin-top: 15px; border: 1px solid #1a73e8; }
+        .concepto { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px dashed #eee; font-size: 14px; }
+        .concepto.total { font-weight: bold; font-size: 18px; border-top: 2px solid #333; margin-top: 15px; border-bottom: none; }
+        .scroll-tabla { overflow-x: auto; max-height: 200px; margin-top: 10px; border: 1px solid #eee; border-radius: 8px; }
+        table { width: 100%; border-collapse: collapse; font-size: 12px; }
+        th, td { padding: 10px; text-align: left; border-bottom: 1px solid #eee; }
+        .btn-reset { background-color: #6c757d; font-size: 11px; width: auto; padding: 5px 10px; margin: 10px auto; display: block; }
+    </style>
+</head>
+<body>
+
+    <h2>⏱️ Mi Control de Nómina</h2>
+
+    <div class="card">
+        <p id="estado-actual" style="text-align:center; font-weight:bold; font-size: 1.1em;"></p>
+        <button id="btn-entrada" class="btn-entrada" onclick="registrarEntrada()">▶ Iniciar Turno</button>
+        <button id="btn-salida" class="btn-salida" onclick="registrarSalida()">⏹ Terminar Turno</button>
+    </div>
+
+    <div class="card">
+        <h3>Configuración y Corte</h3>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+            <div>
+                <label>Salario Base:</label>
+                <input type="number" id="salario" class="save-cfg">
+            </div>
+            <div>
+                <label>Horas Semanales:</label>
+                <select id="horas-semana" class="save-cfg">
+                    <option value="44">44 Horas</option>
+                    <option value="42">42 Horas</option>
+                </select>
+            </div>
+        </div>
+
+        <label>Distribución:</label>
+        <select id="tipo-horario" class="save-cfg">
+            <option value="LV">Lunes a Viernes</option>
+            <option value="LS">Lunes a Sábado</option>
+        </select>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+            <div>
+                <label>Fecha Inicio Corte:</label>
+                <input type="date" id="fecha-inicio" class="save-cfg">
+            </div>
+            <div>
+                <label>Fecha Fin Corte:</label>
+                <input type="date" id="fecha-fin" class="save-cfg">
+            </div>
+        </div>
+
+        <button class="btn-calcular" onclick="calcularPago()">Generar Volante Detallado</button>
+        <div id="resumen-pago" class="resultado" style="display: none;"></div>
+    </div>
+
+    <div class="card">
+        <h3>Historial</h3>
+        <div class="scroll-tabla">
+            <table id="tabla-registros">
+                <thead><tr><th>Entrada</th><th>Salida</th><th>H. Efec.</th></tr></thead>
+                <tbody></tbody>
+            </table>
+        </div>
+        <button class="btn-reset" onclick="resetearTodo()">Borrar todos los datos</button>
+    </div>
+
+    <script>
+        // --- PERSISTENCIA DE DATOS ---
+        let registros = JSON.parse(localStorage.getItem('jornada_registros')) || [];
+        let entradaActiva = localStorage.getItem('entrada_activa');
+
+        // Cargar y Guardar Configuración Automáticamente
+        document.querySelectorAll('.save-cfg').forEach(el => {
+            const savedValue = localStorage.getItem('cfg_' + el.id);
+            if (savedValue) el.value = savedValue;
+
+            el.addEventListener('change', () => {
+                localStorage.setItem('cfg_' + el.id, el.value);
+            });
+        });
+
+        // Valores por defecto si están vacíos
+        if(!document.getElementById('salario').value) document.getElementById('salario').value = 2100000;
+
+        actualizarInterfaz();
+        renderizarTabla();
+
+        function actualizarInterfaz() {
+            const p = document.getElementById('estado-actual');
+            const bE = document.getElementById('btn-entrada');
+            const bS = document.getElementById('btn-salida');
+            if (entradaActiva) {
+                let hora = new Date(parseInt(entradaActiva)).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+                p.innerHTML = `<span style="color:#e67e22">🟡 TRABAJANDO</span><br><small>Desde: ${hora}</small>`;
+                bE.disabled = true; bS.disabled = false;
+            } else {
+                p.innerHTML = `<span style="color:#7f8c8d">⚪ FUERA DE TURNO</span>`;
+                bE.disabled = false; bS.disabled = true;
+            }
+        }
+
+        function registrarEntrada() {
+            entradaActiva = Date.now();
+            localStorage.setItem('entrada_activa', entradaActiva);
+            actualizarInterfaz();
+        }
+
+        function registrarSalida() {
+            let fin = Date.now();
+            if(fin <= parseInt(entradaActiva)) return alert("Error en cronología");
+            registros.push({ entrada: parseInt(entradaActiva), salida: fin });
+            localStorage.setItem('jornada_registros', JSON.stringify(registros));
+            localStorage.removeItem('entrada_activa');
+            entradaActiva = null;
+            actualizarInterfaz();
+            renderizarTabla();
+        }
+
+        function renderizarTabla() {
+            const tbody = document.querySelector("#tabla-registros tbody");
+            tbody.innerHTML = "";
+            registros.slice().reverse().forEach(t => {
+                let diff = (t.salida - t.entrada) / 60000;
+                let efec = (diff >= 240 ? diff - 40 : diff) / 60;
+                tbody.innerHTML += `<tr>
+                    <td>${new Date(t.entrada).toLocaleString([],{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'})}</td>
+                    <td>${new Date(t.salida).toLocaleString([],{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'})}</td>
+                    <td><b>${efec.toFixed(2)}h</b></td>
+                </tr>`;
+            });
+        }
+
+        function resetearTodo() { if(confirm("¿Eliminar historial y config?")) { localStorage.clear(); location.reload(); } }
+
+        async function calcularPago() {
+            const salario = parseFloat(document.getElementById('salario').value);
+            const jornadaSem = parseInt(document.getElementById('horas-semana').value);
+            const tipoHorario = document.getElementById('tipo-horario').value;
+            const fIn = new Date(document.getElementById('fecha-inicio').value).getTime();
+            const fOut = new Date(document.getElementById('fecha-fin').value).getTime() + 86399999;
+
+            if (!salario || isNaN(fIn) || isNaN(fOut)) return alert("Revisa las fechas.");
+
+            const resDiv = document.getElementById('resumen-pago');
+            resDiv.style.display = "block";
+            resDiv.innerHTML = "⌛ Procesando...";
+
+            let festivos = [];
+            try {
+                let resp = await fetch(`https://date.nager.at/api/v3/PublicHolidays/${new Date().getFullYear()}/CO`);
+                if(resp.ok) festivos = (await resp.json()).map(f => f.date);
+            } catch(e) {}
+
+            const divisor = (jornadaSem / 6) * 30;
+            const valorH = salario / divisor;
+            const umbralH = (tipoHorario === "LV") ? (jornadaSem / 5) : 8;
+            const BLOQUE = 0.5;
+
+            let t = { ord:0, noc:0, fD:0, fN:0, eD:0, eN:0, efD:0, efN:0, totalEf:0 };
+
+            registros.forEach(turno => {
+                // LÓGICA DE TRASLAPE SUGERIDA: Turno toca el rango de fechas
+                if (turno.salida >= fIn && turno.entrada <= fOut) {
+                    
+                    // Solo calculamos el pedazo del turno que cae dentro del rango
+                    let cursor = new Date(Math.max(turno.entrada, fIn));
+                    let finT = new Date(Math.min(turno.salida, fOut));
+                    
+                    let hEfTurno = 0;
+                    let pausaOk = false;
+
+                    while (cursor < finT) {
+                        if (!pausaOk && hEfTurno >= 4) {
+                            cursor.setMinutes(cursor.getMinutes() + 40);
+                            pausaOk = true;
+                            if (cursor >= finT) break;
+                        }
+
+                        let horaActual = cursor.getHours();
+                        let esNoc = (horaActual >= 21 || horaActual < 6);
+                        
+                        // FORMATO ISO 'en-CA' (YYYY-MM-DD) SUGERIDO
+                        let fechaIso = cursor.toLocaleDateString('en-CA');
+                        
+                        let esFest = (cursor.getDay() === 0 || festivos.includes(fechaIso));
+                        let esExt = (hEfTurno >= umbralH);
+
+                        if (esFest) {
+                            if (esExt) { esNoc ? t.efN += BLOQUE : t.efD += BLOQUE; }
+                            else { esNoc ? t.fN += BLOQUE : t.fD += BLOQUE; }
+                        } else {
+                            if (esExt) { esNoc ? t.eN += BLOQUE : t.eD += BLOQUE; }
+                            else { esNoc ? t.noc += BLOQUE : t.ord += BLOQUE; }
+                        }
+                        hEfTurno += BLOQUE;
+                        cursor.setMinutes(cursor.getMinutes() + 30);
+                    }
+                    t.totalEf += hEfTurno;
+                }
+            });
+
+            const f = (v) => "$" + Math.round(v).toLocaleString('es-CO');
+            let baseH = t.ord + t.noc + t.fD + t.fN;
+            let vBase = baseH * valorH;
+            
+            const conceptos = [
+                { n: "Recargo Nocturno (35%)", h: t.noc, v: t.noc * (valorH * 0.35) },
+                { n: "Recargo Festivo Diurno (75%)", h: t.fD, v: t.fD * (valorH * 0.75) },
+                { n: "Recargo Festivo Nocturno (110%)", h: t.fN, v: t.fN * (valorH * 1.10) },
+                { n: "Extra Diurna (125%)", h: t.eD, v: t.eD * (valorH * 1.25) },
+                { n: "Extra Nocturna (175%)", h: t.eN, v: t.eN * (valorH * 1.75) },
+                { n: "Extra Festiva Diurna (200%)", h: t.efD, v: t.efD * (valorH * 2.00) },
+                { n: "Extra Festiva Nocturna (250%)", h: t.efN, v: t.efN * (valorH * 2.50) }
+            ];
+
+            let bruto = vBase + conceptos.reduce((acc, c) => acc + c.v, 0);
+            let salud = bruto * 0.04, pen = bruto * 0.04;
+
+            let html = `
+                <div style="text-align:center; font-weight:bold; border-bottom:2px solid #1a73e8; margin-bottom:10px;">VOLANTE DETALLADO</div>
+                <div class="concepto"><span>Sueldo Ordinario (${baseH.toFixed(2)}h)</span><span>${f(vBase)}</span></div>
+            `;
+            conceptos.forEach(c => {
+                if (c.h > 0) html += `<div class="concepto" style="color:#28a745"><span>${c.n} (${c.h.toFixed(2)}h)</span><span>+ ${f(c.v)}</span></div>`;
+            });
+            html += `
+                <div style="margin-top:10px; border-top:1px solid #eee;">
+                    <div class="concepto" style="color:#c0392b"><span>Salud (4%)</span><span>- ${f(salud)}</span></div>
+                    <div class="concepto" style="color:#c0392b"><span>Pensión (4%)</span><span>- ${f(pen)}</span></div>
+                </div>
+                <div class="concepto total"><span>NETO:</span><span>${f(bruto - salud - pen)}</span></div>
+            `;
+            resDiv.innerHTML = html;
+        }
+	if ("serviceWorker" in navigator) {
+    		navigator.serviceWorker.register("sw.js")
+    		.then(() => console.log("Service Worker registrado"))
+    		.catch(err => console.log("Error:", err));
+	}
+    </script>
+</body>
+</html>
