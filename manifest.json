@@ -2,6 +2,7 @@
   "name": "Nomina Pro",
   "short_name": "Nomina",
   "start_url": "/Nomina-app/",
+  "scope": "/Nomina-app/",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#1a73e8",
