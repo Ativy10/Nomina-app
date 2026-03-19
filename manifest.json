@@ -1,7 +1,7 @@
 {
   "name": "Nomina Pro",
   "short_name": "Nomina",
-  "start_url": "/nomina-app/",
+  "start_url": "/Nomina-app/",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#1a73e8",
