@@ -1,21 +1,23 @@
-const CACHE_NAME = "nomina-v1";
-
-const urlsToCache = [
-  "/",
-  "/index.html",
-  "/manifest.json",
-  "/icon-192.png",
-  "/icon-512.png"
-];
+const CACHE = "nomina-cache-v2";
 
 self.addEventListener("install", e => {
   e.waitUntil(
-    caches.open(CACHE_NAME).then(cache => cache.addAll(urlsToCache))
+    caches.open(CACHE).then(cache => {
+      return cache.addAll([
+        "/nomina-app/",
+        "/nomina-app/index.html",
+        "/nomina-app/manifest.json",
+        "/nomina-app/icon-192.png",
+        "/nomina-app/icon-512.png"
+      ]);
+    })
   );
 });
 
 self.addEventListener("fetch", e => {
   e.respondWith(
-    caches.match(e.request).then(res => res || fetch(e.request))
+    caches.match(e.request).then(res => {
+      return res || fetch(e.request);
+    })
   );
 });
