@@ -72,13 +72,14 @@
     </div>
 
     <div class="card">
-        <h3>Historial</h3>
-        <div class="scroll-tabla">
-            <table id="tabla-registros">
-                <thead><tr><th>Entrada</th><th>Salida</th><th>H. Efec.</th></tr></thead>
-                <tbody></tbody>
-            </table>
-        </div>
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+		    <h3>Historial</h3>
+		    <div style="display: flex; gap: 8px;">
+		        <button onclick="exportarHistorial()" style="width:auto; padding:5px 10px; margin:0; background:#28a745; font-size:12px;">📥 Exp</button>
+		        <button onclick="document.getElementById('importarFile').click()" style="width:auto; padding:5px 10px; margin:0; background:#1a73e8; font-size:12px;">📤 Imp</button>
+		        <input type="file" id="importarFile" style="display:none" onchange="importarHistorial(this)">
+		    </div>
+		</div>
         <button class="btn-reset" onclick="resetearTodo()">Borrar todos los datos</button>
     </div>
 
@@ -276,6 +277,40 @@
     		.then(() => console.log("Service Worker registrado"))
     		.catch(err => console.log("Error:", err));
 	}
+		// Exporta el historial a un archivo de texto (JSON) que Excel puede abrir o puedes guardar como backup
+function exportarHistorial() {
+    if (registros.length === 0) return alert("No hay datos para exportar.");
+    
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(registros));
+    const downloadAnchorNode = document.createElement('a');
+    downloadAnchorNode.setAttribute("href", dataStr);
+    downloadAnchorNode.setAttribute("download", "historico_nomina_" + new Date().toLocaleDateString('en-CA') + ".json");
+    document.body.appendChild(downloadAnchorNode);
+    downloadAnchorNode.click();
+    downloadAnchorNode.remove();
+}
+// Lee un archivo previamente exportado y lo carga en el localStorage
+function importarHistorial(input) {
+    const reader = new FileReader();
+    reader.onload = function() {
+        try {
+            const datosImportados = JSON.parse(reader.result);
+            if (Array.isArray(datosImportados)) {
+                if (confirm("¿Deseas reemplazar el historial actual con los datos del archivo?")) {
+                    registros = datosImportados;
+                    localStorage.setItem('jornada_registros', JSON.stringify(registros));
+                    renderizarTabla();
+                    alert("Datos importados con éxito.");
+                }
+            } else {
+                alert("El archivo no tiene el formato correcto.");
+            }
+        } catch (e) {
+            alert("Error al leer el archivo.");
+        }
+    };
+    reader.readAsText(input.files[0]);
+}
     </script>
 </body>
 </html>
