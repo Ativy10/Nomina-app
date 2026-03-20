@@ -154,14 +154,18 @@
             const salario = parseFloat(document.getElementById('salario').value);
             const jornadaSem = parseInt(document.getElementById('horas-semana').value);
             const tipoHorario = document.getElementById('tipo-horario').value;
-            const fIn = new Date(document.getElementById('fecha-inicio').value).getTime();
-            const fOut = new Date(document.getElementById('fecha-fin').value).getTime() + 86399999;
+            
+            // Corrección de zona horaria para cortes exactos a la medianoche local
+            const valIn = document.getElementById('fecha-inicio').value;
+            const valOut = document.getElementById('fecha-fin').value;
+            const fIn = new Date(valIn + "T00:00:00").getTime();
+            const fOut = new Date(valOut + "T23:59:59").getTime();
 
             if (!salario || isNaN(fIn) || isNaN(fOut)) return alert("Revisa las fechas.");
 
             const resDiv = document.getElementById('resumen-pago');
             resDiv.style.display = "block";
-            resDiv.innerHTML = "⌛ Procesando...";
+            resDiv.innerHTML = "⌛ Procesando con precisión de 1 minuto...";
 
             let festivos = [];
             try {
@@ -172,22 +176,39 @@
             const divisor = (jornadaSem / 6) * 30;
             const valorH = salario / divisor;
             const umbralH = (tipoHorario === "LV") ? (jornadaSem / 5) : 8;
-            const BLOQUE = 0.5;
+            
+            // LA CLAVE: Resolución de 1 minuto
+            const BLOQUE = 1 / 60; 
 
             let t = { ord:0, noc:0, fD:0, fN:0, eD:0, eN:0, efD:0, efN:0, totalEf:0 };
 
             registros.forEach(turno => {
-                // LÓGICA DE TRASLAPE SUGERIDA: Turno toca el rango de fechas
                 if (turno.salida >= fIn && turno.entrada <= fOut) {
                     
-                    // Solo calculamos el pedazo del turno que cae dentro del rango
-                    let cursor = new Date(Math.max(turno.entrada, fIn));
-                    let finT = new Date(Math.min(turno.salida, fOut));
+                    // Función de Redondeo (Cortes en minuto :20 y :40)
+                    const ajustarReloj = (timestamp) => {
+                        let d = new Date(timestamp);
+                        let m = d.getMinutes();
+                        if (m <= 20) d.setMinutes(0, 0, 0);
+                        else if (m <= 40) d.setMinutes(30, 0, 0);
+                        else d.setHours(d.getHours() + 1, 0, 0, 0);
+                        return d;
+                    };
+
+                    let dEntrada = ajustarReloj(Math.max(turno.entrada, fIn));
+                    let dSalida = ajustarReloj(Math.min(turno.salida, fOut));
+
+                    if (dSalida <= dEntrada) return; // Filtro de seguridad para turnos vacíos
+
+                    let cursor = new Date(dEntrada);
+                    let finT = new Date(dSalida);
                     
                     let hEfTurno = 0;
                     let pausaOk = false;
 
+                    // Procesamiento Minuto a Minuto
                     while (cursor < finT) {
+                        // Descuento exacto de almuerzo (40 min)
                         if (!pausaOk && hEfTurno >= 4) {
                             cursor.setMinutes(cursor.getMinutes() + 40);
                             pausaOk = true;
@@ -195,11 +216,8 @@
                         }
 
                         let horaActual = cursor.getHours();
-                        let esNoc = (horaActual >= 21 || horaActual < 6);
-                        
-                        // FORMATO ISO 'en-CA' (YYYY-MM-DD) SUGERIDO
+                        let esNoc = (horaActual >= 21 || horaActual < 6); // Nocturno Col (9 PM - 6 AM)
                         let fechaIso = cursor.toLocaleDateString('en-CA');
-                        
                         let esFest = (cursor.getDay() === 0 || festivos.includes(fechaIso));
                         let esExt = (hEfTurno >= umbralH);
 
@@ -210,13 +228,15 @@
                             if (esExt) { esNoc ? t.eN += BLOQUE : t.eD += BLOQUE; }
                             else { esNoc ? t.noc += BLOQUE : t.ord += BLOQUE; }
                         }
+                        
                         hEfTurno += BLOQUE;
-                        cursor.setMinutes(cursor.getMinutes() + 30);
+                        cursor.setMinutes(cursor.getMinutes() + 1); // El reloj avanza 1 minuto
                     }
                     t.totalEf += hEfTurno;
                 }
             });
 
+            // Renderizado (Idéntico a tu diseño)
             const f = (v) => "$" + Math.round(v).toLocaleString('es-CO');
             let baseH = t.ord + t.noc + t.fD + t.fN;
             let vBase = baseH * valorH;
@@ -236,6 +256,7 @@
 
             let html = `
                 <div style="text-align:center; font-weight:bold; border-bottom:2px solid #1a73e8; margin-bottom:10px;">VOLANTE DETALLADO</div>
+                <div class="concepto"><span>Horas Pagas (Con redondeo):</span><span><b>${t.totalEf.toFixed(2)}h</b></span></div>
                 <div class="concepto"><span>Sueldo Ordinario (${baseH.toFixed(2)}h)</span><span>${f(vBase)}</span></div>
             `;
             conceptos.forEach(c => {
