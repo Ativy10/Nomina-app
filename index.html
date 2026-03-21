@@ -22,6 +22,10 @@
         table { width: 100%; border-collapse: collapse; font-size: 12px; }
         th, td { padding: 10px; text-align: left; border-bottom: 1px solid #eee; }
         .btn-reset { background-color: #6c757d; font-size: 11px; width: auto; padding: 5px 10px; margin: 10px auto; display: block; }
+		.modal-manual { display: none; background: #e8eaed; padding: 15px; border-radius: 8px; border: 1px dashed #1a73e8; margin-bottom: 15px; }
+        .btn-manual { background-color: #f39c12; width: auto; padding: 5px 10px; font-size: 12px; margin: 0; }
+        .btn-guardar-manual { background-color: #28a745; margin-top: 15px; }
+        .btn-cancelar { background-color: #6c757d; margin-top: 5px; }
     </style>
 </head>
 <body>
@@ -72,20 +76,26 @@
     </div>
 
     <div class="card">
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-		    <h3>Historial</h3>
-			<div class="scroll-tabla">
-            	<table id="tabla-registros">
-                	<thead><tr><th>Entrada</th><th>Salida</th><th>H. Efec.</th></tr></thead>
-                	<tbody></tbody>
-            	</table>
-        	</div>
-		    <div style="display: flex; gap: 8px;">
-		        <button onclick="exportarHistorial()" style="width:auto; padding:5px 10px; margin:0; background:#28a745; font-size:12px;">📥 Exp</button>
-		        <button onclick="document.getElementById('importarFile').click()" style="width:auto; padding:5px 10px; margin:0; background:#1a73e8; font-size:12px;">📤 Imp</button>
-		        <input type="file" id="importarFile" style="display:none" onchange="importarHistorial(this)">
-		    </div>
-		</div>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+            <h3 style="margin: 0;">Historial</h3>
+            <div style="display: flex; gap: 8px;">
+                <button onclick="toggleManual()" class="btn-manual">➕ Manual</button>
+                <button onclick="exportarHistorial()" style="width:auto; padding:5px 10px; margin:0; background:#28a745; font-size:12px;">📥 Exp</button>
+            </div>
+        </div>
+
+        <div id="form-manual" class="modal-manual">
+            <h4 style="margin-top:0; color:#1a73e8; text-align:center;">Agregar Turno Olvidado</h4>
+            
+            <label>Entrada (Fecha y Hora):</label>
+            <input type="datetime-local" id="manual-in">
+            
+            <label>Salida (Fecha y Hora):</label>
+            <input type="datetime-local" id="manual-out">
+            
+            <button onclick="guardarTurnoManual()" class="btn-guardar-manual">💾 Guardar Turno</button>
+            <button onclick="toggleManual()" class="btn-cancelar">❌ Cancelar</button>
+        </div>
         <button class="btn-reset" onclick="resetearTodo()">Borrar todos los datos</button>
     </div>
 
@@ -306,41 +316,43 @@ function exportarHistorial() {
     link.click();
     document.body.removeChild(link);
 }
-// Lee un archivo previamente exportado y lo carga en el localStorage
-function importarHistorial(input) {
-    const reader = new FileReader();
-    reader.onload = function() {
-        try {
-            const lineas = reader.result.split('\n');
-            let nuevosRegistros = [];
-
-            // Empezamos en 1 para saltar el encabezado
-            for (let i = 1; i < lineas.length; i++) {
-                if (lineas[i].trim() === "") continue;
-                let columnas = lineas[i].split(',');
-                
-                let ent = new Date(columnas[0]).getTime();
-                let sal = new Date(columnas[1]).getTime();
-
-                if (!isNaN(ent) && !isNaN(sal)) {
-                    nuevosRegistros.push({ entrada: ent, salida: sal });
-                }
-            }
-
-            if (nuevosRegistros.length > 0) {
-                if (confirm(`Se encontraron ${nuevosRegistros.length} turnos. ¿Deseas reemplazar el historial actual?`)) {
-                    registros = nuevosRegistros;
-                    localStorage.setItem('jornada_registros', JSON.stringify(registros));
-                    renderizarTabla();
-                    alert("Importación exitosa.");
-                }
-            }
-        } catch (e) {
-            alert("Error al procesar el archivo CSV.");
+// Mostrar/Ocultar el panel manual
+        function toggleManual() {
+            const form = document.getElementById('form-manual');
+            form.style.display = form.style.display === 'block' ? 'none' : 'block';
         }
-    };
-    reader.readAsText(input.files[0]);
-}
+
+        // Validar y guardar el turno inyectado
+        function guardarTurnoManual() {
+            const valIn = document.getElementById('manual-in').value;
+            const valOut = document.getElementById('manual-out').value;
+
+            if (!valIn || !valOut) return alert("⚠️ Por favor selecciona la fecha y hora de Entrada y Salida.");
+
+            const tIn = new Date(valIn).getTime();
+            const tOut = new Date(valOut).getTime();
+
+            if (tOut <= tIn) return alert("❌ Error cronológico: La Salida no puede ser anterior o igual a la Entrada.");
+
+            // Inyectar al array
+            registros.push({ entrada: tIn, salida: tOut });
+            
+            // Ordenar el historial automáticamente para que los turnos viejos queden en su lugar correcto
+            registros.sort((a, b) => a.entrada - b.entrada);
+
+            // Guardar en memoria persistente
+            localStorage.setItem('jornada_registros', JSON.stringify(registros));
+            
+            // Actualizar la interfaz
+            renderizarTabla();
+            toggleManual(); 
+            
+            // Limpiar los campos para el próximo uso
+            document.getElementById('manual-in').value = '';
+            document.getElementById('manual-out').value = '';
+            
+            alert("✅ Turno agregado al historial exitosamente.");
+        }
     </script>
 </body>
 </html>
