@@ -40,6 +40,11 @@
 
     <div class="card">
         <h3>Configuración y Corte</h3>
+		<label>Modalidad de Sueldo:</label>
+		<select id="modo-calculo" class="save-cfg">
+		    <option value="horas">Pago por Horas Trabajadas</option>
+		    <option value="fijo">Sueldo Fijo + Extras y Recargos</option>
+		</select>
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
             <div>
                 <label>Salario Base:</label>
@@ -259,14 +264,23 @@
                 }
             });
 
-            // Renderizado (Idéntico a tu diseño)
+           // --- INICIO DE LA EDICIÓN: Lógica de Modalidad ---
             const f = (v) => "$" + Math.round(v).toLocaleString('es-CO');
+            const modoCalculo = document.getElementById('modo-calculo').value;
+            
+            let vBase = 0;
             let baseH = t.ord + t.noc + t.fD + t.fN;
-            let vBase = baseH * valorH;
+
+            // Decidimos el pago ordinario según el modo seleccionado
+            if (modoCalculo === 'fijo') {
+                vBase = salario; // Usa el sueldo total que ingresaste en el input
+            } else {
+                vBase = baseH * valorH; // Paga solo las horas trabajadas
+            }
             
             const conceptos = [
                 { n: "Recargo Nocturno (35%)", h: t.noc, v: t.noc * (valorH * 0.35) },
-                { n: "Recargo Festivo Diurno (1.80%)", h: t.fD, v: t.fD * (valorH * 1.80) },
+                { n: "Recargo Festivo Diurno (80%)", h: t.fD, v: t.fD * (valorH * 0.80) },
                 { n: "Recargo Festivo Nocturno (110%)", h: t.fN, v: t.fN * (valorH * 1.10) },
                 { n: "Extra Diurna (1.25%)", h: t.eD, v: t.eD * (valorH * 1.25) },
                 { n: "Extra Nocturna (1.75%)", h: t.eN, v: t.eN * (valorH * 1.75) },
@@ -279,20 +293,24 @@
 
             let html = `
                 <div style="text-align:center; font-weight:bold; border-bottom:2px solid #1a73e8; margin-bottom:10px;">VOLANTE DETALLADO</div>
-                <div class="concepto"><span>Horas Pagas (Con redondeo):</span><span><b>${t.totalEf.toFixed(2)}h</b></span></div>
-                <div class="concepto"><span>Sueldo Ordinario (${baseH.toFixed(2)}h)</span><span>${f(vBase)}</span></div>
+                <div class="concepto"><span>Modalidad:</span><span><b>${modoCalculo === 'fijo' ? 'Sueldo Fijo' : 'Por Horas'}</b></span></div>
+                <div class="concepto"><span>Horas Efectivas:</span><span><b>${t.totalEf.toFixed(2)}h</b></span></div>
+                <div class="concepto"><span>${modoCalculo === 'fijo' ? 'Sueldo Base' : 'Sueldo Ordinario ('+baseH.toFixed(2)+'h)'}</span><span>${f(vBase)}</span></div>
             `;
+            
             conceptos.forEach(c => {
                 if (c.h > 0) html += `<div class="concepto" style="color:#28a745"><span>${c.n} (${c.h.toFixed(2)}h)</span><span>+ ${f(c.v)}</span></div>`;
             });
+
             html += `
                 <div style="margin-top:10px; border-top:1px solid #eee;">
                     <div class="concepto" style="color:#c0392b"><span>Salud (4%)</span><span>- ${f(salud)}</span></div>
                     <div class="concepto" style="color:#c0392b"><span>Pensión (4%)</span><span>- ${f(pen)}</span></div>
                 </div>
-                <div class="concepto total"><span>NETO:</span><span>${f(bruto - salud - pen)}</span></div>
+                <div class="concepto total"><span>NETO A RECIBIR:</span><span>${f(bruto - salud - pen)}</span></div>
             `;
             resDiv.innerHTML = html;
+        } // <--- Esta es la llave que cierra calcularPago
         }
 	if ("serviceWorker" in navigator) {
     		navigator.serviceWorker.register("sw.js")
