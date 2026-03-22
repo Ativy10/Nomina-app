@@ -182,18 +182,18 @@
             const salario = parseFloat(document.getElementById('salario').value);
             const jornadaSem = parseInt(document.getElementById('horas-semana').value);
             const tipoHorario = document.getElementById('tipo-horario').value;
-            
-            // Corrección de zona horaria para cortes exactos a la medianoche local
+            const modoCalculo = document.getElementById('modo-calculo').value;
+
             const valIn = document.getElementById('fecha-inicio').value;
             const valOut = document.getElementById('fecha-fin').value;
             const fIn = new Date(valIn + "T00:00:00").getTime();
             const fOut = new Date(valOut + "T23:59:59").getTime();
 
-            if (!salario || isNaN(fIn) || isNaN(fOut)) return alert("Revisa las fechas.");
+            if (!salario || isNaN(fIn) || isNaN(fOut)) return alert("Revisa las fechas y el salario.");
 
             const resDiv = document.getElementById('resumen-pago');
             resDiv.style.display = "block";
-            resDiv.innerHTML = "⌛ Procesando con precisión de 1 minuto...";
+            resDiv.innerHTML = "⌛ Procesando turnos y acumulados semanales...";
 
             let festivos = [];
             try {
@@ -204,80 +204,113 @@
             const divisor = (jornadaSem / 6) * 30;
             const valorH = salario / divisor;
             const umbralH = (tipoHorario === "LV") ? (jornadaSem / 5) : 8;
-            
-            // LA CLAVE: Resolución de 1 minuto
             const BLOQUE = 1 / 60; 
 
             let t = { ord:0, noc:0, fD:0, fN:0, eD:0, eN:0, efD:0, efN:0, totalEf:0 };
 
-            registros.forEach(turno => {
-                if (turno.salida >= fIn && turno.entrada <= fOut) {
+            // 1. Ordenamos todo el historial para que la "memoria" del contador no se rompa
+            let historialOrdenado = [...registros].sort((a, b) => a.entrada - b.entrada);
+
+            // 2. Variables del Acumulador Semanal (PLC Logic)
+            let acumuladoSemanal = 0;
+            let ultimoLunes = null;
+
+            // Función para detectar cuál es el Lunes de la semana actual
+            const getLunesAct = (fecha) => {
+                let d = new Date(fecha);
+                let day = d.getDay();
+                let diff = d.getDate() - day + (day === 0 ? -6 : 1);
+                return new Date(d.setDate(diff)).toLocaleDateString('en-CA');
+            };
+
+            const ajustarReloj = (timestamp) => {
+                let d = new Date(timestamp);
+                let m = d.getMinutes();
+                if (m <= 20) d.setMinutes(0, 0, 0);
+                else if (m <= 40) d.setMinutes(30, 0, 0);
+                else d.setHours(d.getHours() + 1, 0, 0, 0);
+                return d;
+            };
+
+            historialOrdenado.forEach(turno => {
+                let dEntrada = ajustarReloj(turno.entrada);
+                let dSalida = ajustarReloj(turno.salida);
+                if (dSalida <= dEntrada) return;
+
+                let cursor = new Date(dEntrada);
+                let finT = new Date(dSalida);
+                let hEfTurno = 0;
+                let pausaOk = false;
+
+                while (cursor < finT) {
+                    // Descuento de almuerzo
+                    if (!pausaOk && hEfTurno >= 4) {
+                        cursor.setMinutes(cursor.getMinutes() + 40);
+                        pausaOk = true;
+                        if (cursor >= finT) break;
+                    }
+
+                    // BIT DE RESET: Si cambiamos de semana (Es un lunes diferente)
+                    let lunesActual = getLunesAct(cursor);
+                    if (ultimoLunes !== lunesActual) {
+                        acumuladoSemanal = 0; // Vaciamos el contador para la nueva semana
+                        ultimoLunes = lunesActual;
+                    }
+
+                    let horaActual = cursor.getHours();
+                    let esNoc = (horaActual >= 19 || horaActual < 6);
+                    let fechaIso = cursor.toLocaleDateString('en-CA');
+                    let esFest = (cursor.getDay() === 0 || festivos.includes(fechaIso));
                     
-                    // Función de Redondeo (Cortes en minuto :20 y :40)
-                    const ajustarReloj = (timestamp) => {
-                        let d = new Date(timestamp);
-                        let m = d.getMinutes();
-                        if (m <= 20) d.setMinutes(0, 0, 0);
-                        else if (m <= 40) d.setMinutes(30, 0, 0);
-                        else d.setHours(d.getHours() + 1, 0, 0, 0);
-                        return d;
-                    };
+                    let esExtDiaria = (hEfTurno >= umbralH);
+                    let esExt = false;
 
-                    let dEntrada = ajustarReloj(Math.max(turno.entrada, fIn));
-                    let dSalida = ajustarReloj(Math.min(turno.salida, fOut));
+                    // Bandera para saber si el minuto que estamos procesando debe aparecer en tu recibo
+                    let dentroDelCorte = (cursor.getTime() >= fIn && cursor.getTime() <= fOut);
 
-                    if (dSalida <= dEntrada) return; // Filtro de seguridad para turnos vacíos
-
-                    let cursor = new Date(dEntrada);
-                    let finT = new Date(dSalida);
-                    
-                    let hEfTurno = 0;
-                    let pausaOk = false;
-
-                    // Procesamiento Minuto a Minuto
-                    while (cursor < finT) {
-                        // Descuento exacto de almuerzo (40 min)
-                        if (!pausaOk && hEfTurno >= 4) {
-                            cursor.setMinutes(cursor.getMinutes() + 40);
-                            pausaOk = true;
-                            if (cursor >= finT) break;
-                        }
-
-                        let horaActual = cursor.getHours();
-                        let esNoc = (horaActual >= 19 || horaActual < 6); // Nocturno Col (7 PM - 6 AM)
-                        let fechaIso = cursor.toLocaleDateString('en-CA');
-                        let esFest = (cursor.getDay() === 0 || festivos.includes(fechaIso));
-                        let esExt = (hEfTurno >= umbralH);
-
-                        if (esFest) {
+                    if (esFest) {
+                        // DOMINGOS Y FESTIVOS: Solo miran el tope diario. No tocan el contador semanal.
+                        esExt = esExtDiaria;
+                        if (dentroDelCorte) {
                             if (esExt) { esNoc ? t.efN += BLOQUE : t.efD += BLOQUE; }
                             else { esNoc ? t.fN += BLOQUE : t.fD += BLOQUE; }
-                        } else {
-                            if (esExt) { esNoc ? t.eN += BLOQUE : t.eD += BLOQUE; }
-                            else { esNoc ? t.noc += BLOQUE : t.ord += BLOQUE; }
+                            t.totalEf += BLOQUE;
                         }
+                    } else {
+                        // LUNES A SÁBADO: Es extra si se pasa del límite diario O del contador semanal
+                        esExt = (esExtDiaria || acumuladoSemanal >= jornadaSem);
                         
-                        hEfTurno += BLOQUE;
-                        cursor.setMinutes(cursor.getMinutes() + 1); // El reloj avanza 1 minuto
+                        if (esExt) {
+                            if (dentroDelCorte) {
+                                esNoc ? t.eN += BLOQUE : t.eD += BLOQUE;
+                                t.totalEf += BLOQUE;
+                            }
+                        } else {
+                            if (dentroDelCorte) {
+                                esNoc ? t.noc += BLOQUE : t.ord += BLOQUE;
+                                t.totalEf += BLOQUE;
+                            }
+                            // Solo el tiempo ordinario suma al contador de las 42/44 horas
+                            acumuladoSemanal += BLOQUE; 
+                        }
                     }
-                    t.totalEf += hEfTurno;
+
+                    hEfTurno += BLOQUE;
+                    cursor.setMinutes(cursor.getMinutes() + 1);
                 }
             });
 
-           // --- INICIO DE LA EDICIÓN: Lógica de Modalidad ---
+            // --- RENDERIZADO DEL VOLANTE ---
             const f = (v) => "$" + Math.round(v).toLocaleString('es-CO');
-            const modoCalculo = document.getElementById('modo-calculo').value;
-            
             let vBase = 0;
             let baseH = t.ord + t.noc + t.fD + t.fN;
 
-            // Decidimos el pago ordinario según el modo seleccionado
             if (modoCalculo === 'fijo') {
-                vBase = salario; // Usa el sueldo total que ingresaste en el input
+                vBase = salario; 
             } else {
-                vBase = baseH * valorH; // Paga solo las horas trabajadas
+                vBase = baseH * valorH;
             }
-            
+
             const conceptos = [
                 { n: "Recargo Nocturno (35%)", h: t.noc, v: t.noc * (valorH * 0.35) },
                 { n: "Recargo Festivo Diurno (80%)", h: t.fD, v: t.fD * (valorH * 0.80) },
@@ -294,14 +327,12 @@
             let html = `
                 <div style="text-align:center; font-weight:bold; border-bottom:2px solid #1a73e8; margin-bottom:10px;">VOLANTE DETALLADO</div>
                 <div class="concepto"><span>Modalidad:</span><span><b>${modoCalculo === 'fijo' ? 'Sueldo Fijo' : 'Por Horas'}</b></span></div>
-                <div class="concepto"><span>Horas Efectivas:</span><span><b>${t.totalEf.toFixed(2)}h</b></span></div>
+                <div class="concepto"><span>Horas Efectivas (Corte):</span><span><b>${t.totalEf.toFixed(2)}h</b></span></div>
                 <div class="concepto"><span>${modoCalculo === 'fijo' ? 'Sueldo Base' : 'Sueldo Ordinario ('+baseH.toFixed(2)+'h)'}</span><span>${f(vBase)}</span></div>
             `;
-            
             conceptos.forEach(c => {
                 if (c.h > 0) html += `<div class="concepto" style="color:#28a745"><span>${c.n} (${c.h.toFixed(2)}h)</span><span>+ ${f(c.v)}</span></div>`;
             });
-
             html += `
                 <div style="margin-top:10px; border-top:1px solid #eee;">
                     <div class="concepto" style="color:#c0392b"><span>Salud (4%)</span><span>- ${f(salud)}</span></div>
@@ -310,7 +341,7 @@
                 <div class="concepto total"><span>NETO A RECIBIR:</span><span>${f(bruto - salud - pen)}</span></div>
             `;
             resDiv.innerHTML = html;
-        } // <--- Esta es la llave que cierra calcularPago
+        }// <--- Esta es la llave que cierra calcularPago
 	if ("serviceWorker" in navigator) {
     		navigator.serviceWorker.register("sw.js")
     		.then(() => console.log("Service Worker registrado"))
