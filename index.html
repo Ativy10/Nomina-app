@@ -132,7 +132,23 @@
 
         actualizarInterfaz();
         renderizarTabla();
+		cargarFestivos();
 
+		let festivos = [];
+		async function cargarFestivos() {
+	    try {
+	        let resp = await fetch(`https://date.nager.at/api/v3/PublicHolidays/${new Date().getFullYear()}/CO`);
+	        if (resp.ok) {
+	            festivos = (await resp.json()).map(f => f.date);
+	        }
+	    } catch(e) {
+	        console.log("Error cargando festivos");
+	    }
+	}
+		function esFestivo(fecha) {
+	    let iso = fecha.toLocaleDateString('en-CA');
+	    return festivos.includes(iso);
+	}
         function actualizarInterfaz() {
             const p = document.getElementById('estado-actual');
             const bE = document.getElementById('btn-entrada');
@@ -258,7 +274,7 @@ function eliminarRegistro(indice) {
             resDiv.style.display = "block";
             resDiv.innerHTML = "⌛ Procesando turnos y acumulados semanales...";
 
-            let festivos = [];
+            //let festivos = [];
             try {
                 let resp = await fetch(`https://date.nager.at/api/v3/PublicHolidays/${new Date().getFullYear()}/CO`);
                 if(resp.ok) festivos = (await resp.json()).map(f => f.date);
