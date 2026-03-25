@@ -1,4 +1,4 @@
-const CACHE_NAME = "jornada-v1";
+const CACHE_NAME = "jornada-v1.1";
 
 self.addEventListener("install", e => {
   e.waitUntil(
