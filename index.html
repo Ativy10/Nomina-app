@@ -58,7 +58,10 @@
                 </select>
             </div>
         </div>
-
+		<div style="margin-top: 10px;">
+	    <label style="font-size: 14px; font-weight: bold;">Descuentos Fijos Mensuales ($):</label>
+	    <input type="number" id="descuentos" class="save-cfg" placeholder="Ej: 50000" style="width: 100%; padding: 8px; margin-top: 5px; box-sizing: border-box; border-radius: 4px; border: 1px solid #ccc;">
+	</div>
         <label>Distribución:</label>
         <select id="tipo-horario" class="save-cfg">
             <option value="LV">Lunes a Viernes</option>
@@ -268,6 +271,7 @@ function eliminarRegistro(indice) {
             const jornadaSem = parseInt(document.getElementById('horas-semana').value);
             const tipoHorario = document.getElementById('tipo-horario').value;
             const modoCalculo = document.getElementById('modo-calculo').value;
+			const descuentosFijos = parseFloat(document.getElementById('descuentos').value) || 0;
 
             const valIn = document.getElementById('fecha-inicio').value;
             const valOut = document.getElementById('fecha-fin').value;
@@ -408,6 +412,7 @@ function eliminarRegistro(indice) {
 
             let bruto = vBase + conceptos.reduce((acc, c) => acc + c.v, 0);
             let salud = bruto * 0.04, pen = bruto * 0.04;
+			let netoFinal = bruto - salud - pen - descuentosFijos;
 
             let html = `
                 <div style="text-align:center; font-weight:bold; border-bottom:2px solid #1a73e8; margin-bottom:10px;">VOLANTE DETALLADO</div>
@@ -421,12 +426,15 @@ function eliminarRegistro(indice) {
             html += `
                 <div style="margin-top:10px; border-top:1px solid #eee;">
                     <div class="concepto" style="color:#c0392b"><span>Salud (4%)</span><span>- ${f(salud)}</span></div>
-                    <div class="concepto" style="color:#c0392b"><span>Pensión (4%)</span><span>- ${f(pen)}</span></div>
-                </div>
-                <div class="concepto total"><span>NETO A RECIBIR:</span><span>${f(bruto - salud - pen)}</span></div>
-            `;
-            resDiv.innerHTML = html;
-        }// <--- Esta es la llave que cierra calcularPago
+                    <div class="concepto" style="color:#c0392b"><span>Pensión (4%)</span><span>- ${f(pen)}</span></div>`;
+                if (descuentosFijos > 0) {
+	        html += `<div class="concepto" style="color:#c0392b"><span>Descuentos Fijos</span><span>- ${f(descuentosFijos)}</span></div>`;
+	    		}
+		    html += `
+		        </div>
+		        <div class="concepto total"><span>NETO A RECIBIR:</span><span>${f(netoFinal)}</span></div>`;
+		    resDiv.innerHTML = html;
+		}// <--- Esta es la llave que cierra calcularPago
 		if ("serviceWorker" in navigator) {
 	    navigator.serviceWorker.register("sw.js").then(reg => {
 	        reg.onupdatefound = () => {
