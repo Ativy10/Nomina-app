@@ -85,6 +85,8 @@
             <h3 style="margin: 0;">Historial</h3>
             <div style="display: flex; gap: 8px;">
                 <button onclick="toggleManual()" class="btn-manual">➕ Manual</button>
+				<button onclick="document.getElementById('input-import').click()" style="width:auto; padding:5px 10px; margin:0; background:#f39c12; font-size:12px;">📤 Imp</button>
+				<input type="file" id="input-import" style="display:none" accept=".csv" onchange="importarHistorial(event)">
                 <button onclick="exportarHistorial()" style="width:auto; padding:5px 10px; margin:0; background:#28a745; font-size:12px;">📥 Exp</button>
             </div>
         </div>
@@ -388,6 +390,43 @@ function eliminarRegistro(indice) {
     		//.then(() => console.log("Service Worker registrado"))
     		//.catch(err => console.log("Error:", err));
 	//}
+		function importarHistorial(event) {
+	    const archivo = event.target.files[0];
+	    if (!archivo) return;
+	
+	    const lector = new FileReader();
+	    lector.onload = function(e) {
+	        const contenido = e.target.result;
+	        const lineas = contenido.split("\n");
+	        const nuevosRegistros = [];
+	
+	        // Empezamos en 1 para saltar el encabezado (Entrada, Salida)
+	        for (let i = 1; i < lineas.length; i++) {
+	            if (lineas[i].trim() === "") continue;
+	            const columnas = lineas[i].split(",");
+	            if (columnas.length >= 2) {
+	                nuevosRegistros.push({
+	                    entrada: new Date(columnas[0]).getTime(),
+	                    salida: new Date(columnas[1]).getTime()
+	                });
+	            }
+	        }
+	
+	        if (nuevosRegistros.length > 0) {
+	            if (confirm(`Se encontraron ${nuevosRegistros.length} turnos. ¿Deseas cargarlos?`)) {
+	                // Unimos lo que ya hay con lo nuevo y ordenamos
+	                registros = [...registros, ...nuevosRegistros];
+	                registros.sort((a, b) => a.entrada - b.entrada);
+	                localStorage.setItem('jornada_registros', JSON.stringify(registros));
+	                renderizarTabla();
+	                alert("✅ Datos importados con éxito.");
+	            }
+	        } else {
+	            alert("❌ El archivo no tiene el formato correcto.");
+	        }
+	    };
+	    lector.readAsText(archivo);
+	}
 		// Exporta el historial a un archivo de texto (JSON) que Excel puede abrir o puedes guardar como backup
 function exportarHistorial() {
     if (registros.length === 0) return alert("No hay datos para exportar.");
