@@ -130,9 +130,15 @@
         // Valores por defecto si están vacíos
         if(!document.getElementById('salario').value) document.getElementById('salario').value = 2100000;
 
-        actualizarInterfaz();
-        renderizarTabla();
-		cargarFestivos();
+        //actualizarInterfaz();
+        //renderizarTabla();
+		//cargarFestivos();
+		async function init() {
+	    await cargarFestivos();   // ← IMPORTANTE
+	    actualizarInterfaz();
+	    renderizarTabla();
+	}
+	init();
 
 		let festivos = [];
 		async function cargarFestivos() {
