@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="manifest" href="manifest.json">
+    <title>Nómina Pro - Configuración Persistente</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <div class="app-shell">
+        <header class="app-header">
+            <h2>⏱️ Mi Control de Nómina</h2>
+
+            <!-- Reemplazo de la navegación principal -->
+<nav class="navigation">
+    <ul>
+        <li class="list active" data-view="home">
+            <a href="#">
+                <span class="icon">🏠</span>
+                <span class="text">Inicio</span>
+            </a>
+        </li>
+        <li class="list" data-view="config">
+            <a href="#">
+                <span class="icon">⚙️</span>
+                <span class="text">Config</span>
+            </a>
+        </li>
+        <li class="list" data-view="history">
+            <a href="#">
+                <span class="icon">📅</span>
+                <span class="text">Historial</span>
+            </a>
+        </li>
+        <li class="list" data-view="report">
+            <a href="#">
+                <span class="icon">📄</span>
+                <span class="text">Reporte</span>
+            </a>
+        </li>
+        <li class="list" data-view="settings">
+            <a href="#">
+                <span class="icon">🛠️</span>
+                <span class="text">Ajustes</span>
+            </a>
+        </li>
+        <!-- Indicador circular flotante que se moverá con CSS -->
+        <div class="indicator"></div>
+    </ul>
+</nav>
+        </header>
+
+        <main class="main-content">
+            <section id="view-home" class="view active">
+                <div class="card">
+                    <p id="estado-actual" class="text-center status-text"></p>
+                    <button id="btn-entrada" class="btn-entrada" type="button">▶ Iniciar Turno</button>
+                    <button id="btn-salida" class="btn-salida" type="button">⏹ Terminar Turno</button>
+                </div>
+            </section>
+
+            <section id="view-config" class="view">
+                <div class="card">
+                    <h3>💰 Configuracion de Salario </h3>
+
+                    <label for="modo-calculo">Modalidad de Sueldo:</label>
+                    <select id="modo-calculo" class="save-cfg">
+                        <option value="horas">Pago por Horas Trabajadas</option>
+                        <option value="fijo">Sueldo Fijo + Extras y Recargos</option>
+                    </select>
+
+                    <div class="fila-doble">
+                        <div>
+                            <label for="salario">Salario Base:</label>
+                            <input type="number" id="salario" class="save-cfg">
+                        </div>
+                        <div>
+                            <label for="descuentos" style="font-size: 14px; font-weight: 700;">Descuentos Fijos Mensuales ($):</label>
+                            <input type="number" id="descuentos" class="save-cfg" placeholder="Ej: 50000">
+                        </div>
+                    </div>
+
+                </div>
+                <div class="card">
+                    <h3>⏱ JORNADA </h3>
+                    <div style="margin-top: 10px;">
+                        <label for="horas-semana">Horas Semanales:</label>
+                        <input type="number" id="horas-semana" class="save-cfg" min="1" step="1" placeholder="Ej: 44">
+                    </div>
+
+                    <label for="tipo-horario">Distribución:</label>
+                    <select id="tipo-horario" class="save-cfg">
+                        <option value="LV">Lunes a Viernes</option>
+                        <option value="LS">Lunes a Sábado</option>
+                    </select>
+
+                                        <div class="fila-doble">
+                        <div>
+                            <label for="cfg-horaInicio">Hora Inicio Jornada:</label>
+                            <input type="time" id="horaInicio" class="save-cfg" value="07:00">
+                        </div>
+                        <div>
+                            <label for="cfg-horaFin">Hora Fin Jornada:</label>
+                            <input type="time" id="horaFin" class="save-cfg" value="19:00">
+                        </div>
+                    </div>
+
+                    <div class="fila-doble">
+                        <div>
+                            <label for="fecha-inicio">Fecha Inicio Corte:</label>
+                            <input type="date" id="fecha-inicio" class="save-cfg">
+                        </div>
+                        <div>
+                            <label for="fecha-fin">Fecha Fin Corte:</label>
+                            <input type="date" id="fecha-fin" class="save-cfg">
+                        </div>
+                    </div>
+                    <div class="fila-doble">
+                        <div>
+                            <label for="Tiempo-descanso">Tiempo de Descanso (minutos):</label>
+                            <input type="number" id="Tiempo-descanso" class="save-cfg" value="30">
+                        </div>
+                    </div>
+
+                </div>
+                <div class="card">
+                <h3>💵 Porcentajes de Recargos y Extras (%)</h3>
+                    <div class="fila-doble">
+                        <div>
+                            <label for="cfg-recargoNocturno">Recargo Nocturno (%):</label>
+                            <input type="number" id="recargoNocturno" class="save-cfg" value="0.35" step="0.5">
+                        </div>
+                        <div>
+                            <label for="cfg-extraDiurna">Extra Diurna (%):</label>
+                            <input type="number" id="extraDiurna" class="save-cfg" value="1.25" step="0.5">
+                        </div>
+                    </div>
+                    <div class="fila-doble">
+                        <div>
+                            <label for="cfg-extraNocturna">Extra Nocturna (%):</label>
+                            <input type="number" id="extraNocturna" class="save-cfg" value="1.75" step="0.5">
+                        </div>
+                        <div>
+                            <label for="cfg-recargoFestivoDiurno">Recargo Festivo Diurno (%):</label>
+                            <input type="number" id="recargoFestivoDiurno" class="save-cfg" value="1.80" step="0.5">
+                        </div>
+                    </div>
+                    <div class="fila-doble">
+                        <div>
+                            <label for="cfg-RecargoFestivoNocturno">Recargo Festivo Nocturno (%):</label>
+                            <input type="number" id="RecargoFestivoNocturno" class="save-cfg" value="2.15" step="0.5">
+                        </div>
+                        <div>
+                            <label for="cfg-ExtraFestivoDiurno">Extra Festivo Diurno (%):</label>
+                            <input type="number" id="ExtraFestivoDiurno" class="save-cfg" value="2.05" step="0.5">
+                        </div>
+                    </div>
+                    <div class="fila-doble">
+                        <div>
+                            <label for="cfg-ExtraFestivoNocturno">Extra Festivo Nocturno (%):</label>
+                            <input type="number" id="ExtraFestivoNocturno" class="save-cfg" value="2.55" step="0.5">
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="view-history" class="view">
+                <div class="card">
+                    <div class="top-bar">
+                        <h3>Historial</h3>
+                        <div class="top-bar-actions">
+                            <button type="button" class="btn-manual">➕ Manual</button>
+                            <button type="button" class="icon-btn btn-import" onclick="document.getElementById('input-import').click()">📤 Imp</button>
+                            <input type="file" id="input-import" style="display:none" accept=".csv">
+                            <button type="button" class="icon-btn btn-export">📥 Exp</button>
+                        </div>
+                    </div>
+
+                    <div id="form-manual" class="modal-manual">
+                        <h4 style="margin: 0 0 12px; color: var(--primary); text-align: center;">Agregar Turno Olvidado</h4>
+
+                        <label for="manual-in">Entrada (Fecha y Hora):</label>
+                        <input type="datetime-local" id="manual-in">
+
+                        <label for="manual-out">Salida (Fecha y Hora):</label>
+                        <input type="datetime-local" id="manual-out">
+
+                        <button type="button" class="btn-guardar-manual">💾 Guardar Turno</button>
+                        <button type="button" class="btn-cancelar">❌ Cancelar</button>
+                    </div>
+
+                    <div class="scroll-tabla">
+                        <table id="tabla-registros">
+                            <thead>
+                                <tr>
+                                    <th>Entrada</th>
+                                    <th>Salida</th>
+                                    <th>H. Efec.</th>
+                                    <th>Acción</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <section id="view-report" class="view">
+                <div class="card">
+                    <button class="btn-calcular" type="button">Generar Volante Detallado</button>
+                    <h3>Reporte / Volante</h3>
+                    <div id="resumen-pago" class="resultado" style="display: none;"></div>
+                </div>
+            </section>
+
+            <section id="view-settings" class="view">
+                <div class="card">
+                    <h3>Ajustes</h3>
+                    <p class="settings-text">Aquí puedes restaurar la app o volver a valores por defecto.</p>
+                    <button type="button" class="btn-reset">Borrar todos los datos</button>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="js/storage.js"></script>
+    <script src="js/holidays.js"></script>
+    <script src="js/payroll.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/app.js"></script>
+</body>
