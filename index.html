@@ -1,556 +1,196 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <link rel="manifest" href="manifest.json">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="manifest" href="manifest.json">
     <title>Nómina Pro - Configuración Persistente</title>
-    <style>
-        body { font-family: 'Segoe UI', sans-serif; background-color: #f0f2f5; color: #1c1e21; max-width: 600px; margin: 0 auto; padding: 15px; }
-        .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); margin-bottom: 15px; }
-        h2, h3 { text-align: center; color: #1a73e8; margin-top: 0; }
-        button { width: 100%; padding: 14px; font-size: 16px; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; transition: 0.2s; margin-bottom: 10px; color: white; }
-        .btn-entrada { background-color: #28a745; }
-        .btn-salida { background-color: #dc3545; }
-        .btn-calcular { background-color: #1a73e8; margin-top: 15px; }
-        label { font-weight: bold; display: block; margin-top: 12px; font-size: 13px; color: #4b4f56; }
-        input, select { width: 100%; padding: 10px; margin-top: 5px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; font-size: 15px; }
-        .resultado { background-color: #fff; padding: 20px; border-radius: 10px; margin-top: 15px; border: 1px solid #1a73e8; }
-        .concepto { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px dashed #eee; font-size: 14px; }
-        .concepto.total { font-weight: bold; font-size: 18px; border-top: 2px solid #333; margin-top: 15px; border-bottom: none; }
-        .scroll-tabla { overflow-x: auto; max-height: 200px; margin-top: 10px; border: 1px solid #eee; border-radius: 8px; }
-        table { width: 100%; border-collapse: collapse; font-size: 12px; }
-        th, td { padding: 10px; text-align: left; border-bottom: 1px solid #eee; }
-        .btn-reset { background-color: #6c757d; font-size: 11px; width: auto; padding: 5px 10px; margin: 10px auto; display: block; }
-		.modal-manual { display: none; background: #e8eaed; padding: 15px; border-radius: 8px; border: 1px dashed #1a73e8; margin-bottom: 15px; }
-        .btn-manual { background-color: #f39c12; width: auto; padding: 5px 10px; font-size: 12px; margin: 0; }
-        .btn-guardar-manual { background-color: #28a745; margin-top: 15px; }
-        .btn-cancelar { background-color: #6c757d; margin-top: 5px; }
-    </style>
+    <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
+    <div class="app-shell">
+        <header class="app-header">
+            <h2>⏱️ Mi Control de Nómina</h2>
 
-    <h2>⏱️ Mi Control de Nómina</h2>
+            <nav class="main-nav" aria-label="Menú principal">
+                <button class="nav-btn active" type="button" data-view="home">Inicio</button>
+                <button class="nav-btn" type="button" data-view="config">Configuración</button>
+                <button class="nav-btn" type="button" data-view="history">Historial</button>
+                <button class="nav-btn" type="button" data-view="report">Reporte</button>
+                <button class="nav-btn" type="button" data-view="settings">Ajustes</button>
+            </nav>
+        </header>
 
-    <div class="card">
-        <p id="estado-actual" style="text-align:center; font-weight:bold; font-size: 1.1em;"></p>
-        <button id="btn-entrada" class="btn-entrada" onclick="registrarEntrada()">▶ Iniciar Turno</button>
-        <button id="btn-salida" class="btn-salida" onclick="registrarSalida()">⏹ Terminar Turno</button>
+        <main class="main-content">
+            <section id="view-home" class="view active">
+                <div class="card">
+                    <p id="estado-actual" class="text-center status-text"></p>
+                    <button id="btn-entrada" class="btn-entrada" type="button">▶ Iniciar Turno</button>
+                    <button id="btn-salida" class="btn-salida" type="button">⏹ Terminar Turno</button>
+                </div>
+            </section>
+
+            <section id="view-config" class="view">
+                <div class="card">
+                    <h3>💰 Configuracion de Salario </h3>
+
+                    <label for="modo-calculo">Modalidad de Sueldo:</label>
+                    <select id="modo-calculo" class="save-cfg">
+                        <option value="horas">Pago por Horas Trabajadas</option>
+                        <option value="fijo">Sueldo Fijo + Extras y Recargos</option>
+                    </select>
+
+                    <div class="fila-doble">
+                        <div>
+                            <label for="salario">Salario Base:</label>
+                            <input type="number" id="salario" class="save-cfg">
+                        </div>
+                        <div>
+                            <label for="descuentos" style="font-size: 14px; font-weight: 700;">Descuentos Fijos Mensuales ($):</label>
+                            <input type="number" id="descuentos" class="save-cfg" placeholder="Ej: 50000">
+                        </div>
+                    </div>
+
+                </div>
+                <div class="card">
+                    <h3>⏱ JORNADA </h3>
+                    <div style="margin-top: 10px;">
+                        <label for="horas-semana">Horas Semanales:</label>
+                        <input type="number" id="horas-semana" class="save-cfg" min="1" step="1" placeholder="Ej: 44">
+                    </div>
+
+                    <label for="tipo-horario">Distribución:</label>
+                    <select id="tipo-horario" class="save-cfg">
+                        <option value="LV">Lunes a Viernes</option>
+                        <option value="LS">Lunes a Sábado</option>
+                    </select>
+
+                                        <div class="fila-doble">
+                        <div>
+                            <label for="cfg-horaInicio">Hora Inicio Jornada:</label>
+                            <input type="time" id="horaInicio" class="save-cfg" value="07:00">
+                        </div>
+                        <div>
+                            <label for="cfg-horaFin">Hora Fin Jornada:</label>
+                            <input type="time" id="horaFin" class="save-cfg" value="19:00">
+                        </div>
+                    </div>
+
+                    <div class="fila-doble">
+                        <div>
+                            <label for="fecha-inicio">Fecha Inicio Corte:</label>
+                            <input type="date" id="fecha-inicio" class="save-cfg">
+                        </div>
+                        <div>
+                            <label for="fecha-fin">Fecha Fin Corte:</label>
+                            <input type="date" id="fecha-fin" class="save-cfg">
+                        </div>
+                    </div>
+
+                </div>
+                <div class="card">
+                <h3>💵 Porcentajes de Recargos y Extras (%)</h3>
+                    <div class="fila-doble">
+                        <div>
+                            <label for="cfg-recargoNocturno">Recargo Nocturno (%):</label>
+                            <input type="number" id="recargoNocturno" class="save-cfg" value="0.35" step="0.5">
+                        </div>
+                        <div>
+                            <label for="cfg-extraDiurna">Extra Diurna (%):</label>
+                            <input type="number" id="extraDiurna" class="save-cfg" value="1.25" step="0.5">
+                        </div>
+                    </div>
+                    <div class="fila-doble">
+                        <div>
+                            <label for="cfg-extraNocturna">Extra Nocturna (%):</label>
+                            <input type="number" id="extraNocturna" class="save-cfg" value="1.75" step="0.5">
+                        </div>
+                        <div>
+                            <label for="cfg-recargoFestivoDiurno">Recargo Festivo Diurno (%):</label>
+                            <input type="number" id="recargoFestivoDiurno" class="save-cfg" value="1.80" step="0.5">
+                        </div>
+                    </div>
+                    <div class="fila-doble">
+                        <div>
+                            <label for="cfg-RecargoFestivoNocturno">Recargo Festivo Nocturno (%):</label>
+                            <input type="number" id="RecargoFestivoNocturno" class="save-cfg" value="2.15" step="0.5">
+                        </div>
+                        <div>
+                            <label for="cfg-ExtraFestivoDiurno">Extra Festivo Diurno (%):</label>
+                            <input type="number" id="ExtraFestivoDiurno" class="save-cfg" value="2.05" step="0.5">
+                        </div>
+                    </div>
+                    <div class="fila-doble">
+                        <div>
+                            <label for="cfg-ExtraFestivoNocturno">Extra Festivo Nocturno (%):</label>
+                            <input type="number" id="ExtraFestivoNocturno" class="save-cfg" value="2.55" step="0.5">
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="view-history" class="view">
+                <div class="card">
+                    <div class="top-bar">
+                        <h3>Historial</h3>
+                        <div class="top-bar-actions">
+                            <button type="button" class="btn-manual">➕ Manual</button>
+                            <button type="button" class="icon-btn btn-import" onclick="document.getElementById('input-import').click()">📤 Imp</button>
+                            <input type="file" id="input-import" style="display:none" accept=".csv">
+                            <button type="button" class="icon-btn btn-export">📥 Exp</button>
+                        </div>
+                    </div>
+
+                    <div id="form-manual" class="modal-manual">
+                        <h4 style="margin: 0 0 12px; color: var(--primary); text-align: center;">Agregar Turno Olvidado</h4>
+
+                        <label for="manual-in">Entrada (Fecha y Hora):</label>
+                        <input type="datetime-local" id="manual-in">
+
+                        <label for="manual-out">Salida (Fecha y Hora):</label>
+                        <input type="datetime-local" id="manual-out">
+
+                        <button type="button" class="btn-guardar-manual">💾 Guardar Turno</button>
+                        <button type="button" class="btn-cancelar">❌ Cancelar</button>
+                    </div>
+
+                    <div class="scroll-tabla">
+                        <table id="tabla-registros">
+                            <thead>
+                                <tr>
+                                    <th>Entrada</th>
+                                    <th>Salida</th>
+                                    <th>H. Efec.</th>
+                                    <th>Acción</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <section id="view-report" class="view">
+                <div class="card">
+                    <button class="btn-calcular" type="button">Generar Volante Detallado</button>
+                    <h3>Reporte / Volante</h3>
+                    <div id="resumen-pago" class="resultado" style="display: none;"></div>
+                </div>
+            </section>
+
+            <section id="view-settings" class="view">
+                <div class="card">
+                    <h3>Ajustes</h3>
+                    <p class="settings-text">Aquí puedes restaurar la app o volver a valores por defecto.</p>
+                    <button type="button" class="btn-reset">Borrar todos los datos</button>
+                </div>
+            </section>
+        </main>
     </div>
 
-    <div class="card">
-        <h3>Configuración y Corte</h3>
-		<label>Modalidad de Sueldo:</label>
-		<select id="modo-calculo" class="save-cfg">
-		    <option value="horas">Pago por Horas Trabajadas</option>
-		    <option value="fijo">Sueldo Fijo + Extras y Recargos</option>
-		</select>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-            <div>
-                <label>Salario Base:</label>
-                <input type="number" id="salario" class="save-cfg">
-            </div>
-            <div>
-                <label>Horas Semanales:</label>
-                <select id="horas-semana" class="save-cfg">
-                    <option value="44">44 Horas</option>
-                    <option value="42">42 Horas</option>
-                </select>
-            </div>
-        </div>
-		<div style="margin-top: 10px;">
-	    <label style="font-size: 14px; font-weight: bold;">Descuentos Fijos Mensuales ($):</label>
-	    <input type="number" id="descuentos" class="save-cfg" placeholder="Ej: 50000" style="width: 100%; padding: 8px; margin-top: 5px; box-sizing: border-box; border-radius: 4px; border: 1px solid #ccc;">
-	</div>
-        <label>Distribución:</label>
-        <select id="tipo-horario" class="save-cfg">
-            <option value="LV">Lunes a Viernes</option>
-            <option value="LS">Lunes a Sábado</option>
-        </select>
-
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-            <div>
-                <label>Fecha Inicio Corte:</label>
-                <input type="date" id="fecha-inicio" class="save-cfg">
-            </div>
-            <div>
-                <label>Fecha Fin Corte:</label>
-                <input type="date" id="fecha-fin" class="save-cfg">
-            </div>
-        </div>
-
-        <button class="btn-calcular" onclick="calcularPago()">Generar Volante Detallado</button>
-        <div id="resumen-pago" class="resultado" style="display: none;"></div>
-    </div>
-
-    <div class="card">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-            <h3 style="margin: 0;">Historial</h3>
-            <div style="display: flex; gap: 8px;">
-                <button onclick="toggleManual()" class="btn-manual">➕ Manual</button>
-				<button onclick="document.getElementById('input-import').click()" style="width:auto; padding:5px 10px; margin:0; background:#1a73e8; font-size:12px;">📤 Imp</button>
-				<input type="file" id="input-import" style="display:none" accept=".csv" onchange="importarHistorial(event)">
-                <button onclick="exportarHistorial()" style="width:auto; padding:5px 10px; margin:0; background:#28a745; font-size:12px;">📥 Exp</button>
-            </div>
-        </div>
-
-        <div id="form-manual" class="modal-manual">
-            <h4 style="margin-top:0; color:#1a73e8; text-align:center;">Agregar Turno Olvidado</h4>
-            
-            <label>Entrada (Fecha y Hora):</label>
-            <input type="datetime-local" id="manual-in">
-            
-            <label>Salida (Fecha y Hora):</label>
-            <input type="datetime-local" id="manual-out">
-            
-            <button onclick="guardarTurnoManual()" class="btn-guardar-manual">💾 Guardar Turno</button>
-            <button onclick="toggleManual()" class="btn-cancelar">❌ Cancelar</button>
-        </div>
-		<div class="scroll-tabla">
-            	<table id="tabla-registros">
-                	<thead><tr><th>Entrada</th><th>Salida</th><th>H. Efec.</th></tr></thead>
-                	<tbody></tbody>
-            	</table>
-        </div>
-        <button class="btn-reset" onclick="resetearTodo()">Borrar todos los datos</button>
-    </div>
-
-    <script>
-        // --- PERSISTENCIA DE DATOS ---
-        let registros = JSON.parse(localStorage.getItem('jornada_registros')) || [];
-        let entradaActiva = localStorage.getItem('entrada_activa');
-
-        // Cargar y Guardar Configuración Automáticamente
-        document.querySelectorAll('.save-cfg').forEach(el => {
-            const savedValue = localStorage.getItem('cfg_' + el.id);
-            if (savedValue) el.value = savedValue;
-
-            el.addEventListener('change', () => {
-                localStorage.setItem('cfg_' + el.id, el.value);
-            });
-        });
-
-        // Valores por defecto si están vacíos
-        if(!document.getElementById('salario').value) document.getElementById('salario').value = 2100000;
-
-        //actualizarInterfaz();
-        //renderizarTabla();
-		//cargarFestivos();
-		async function init() {
-	    await cargarFestivos();   // ← IMPORTANTE
-	    actualizarInterfaz();
-	    renderizarTabla();
-	}
-	init();
-
-		let festivos = [];
-		async function cargarFestivos() {
-	    try {
-	        let resp = await fetch(`https://date.nager.at/api/v3/PublicHolidays/${new Date().getFullYear()}/CO`);
-	        if (resp.ok) {
-	            festivos = (await resp.json()).map(f => f.date);
-	        }
-	    } catch(e) {
-	        console.log("Error cargando festivos");
-	    }
-	}
-		function esFestivo(fecha) {
-	    let iso = fecha.toLocaleDateString('en-CA');
-	    return festivos.includes(iso);
-	}
-        function actualizarInterfaz() {
-            const p = document.getElementById('estado-actual');
-            const bE = document.getElementById('btn-entrada');
-            const bS = document.getElementById('btn-salida');
-            if (entradaActiva) {
-                let hora = new Date(parseInt(entradaActiva)).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
-                p.innerHTML = `<span style="color:#e67e22">🟡 TRABAJANDO</span><br><small>Desde: ${hora}</small>`;
-                bE.disabled = true; bS.disabled = false;
-            } else {
-                p.innerHTML = `<span style="color:#7f8c8d">⚪ FUERA DE TURNO</span>`;
-                bE.disabled = false; bS.disabled = true;
-            }
-        }
-
-        function registrarEntrada() {
-            entradaActiva = Date.now();
-            localStorage.setItem('entrada_activa', entradaActiva);
-            actualizarInterfaz();
-        }
-
-        function registrarSalida() {
-            let fin = Date.now();
-            if(fin <= parseInt(entradaActiva)) return alert("Error en cronología");
-            registros.push({ entrada: parseInt(entradaActiva), salida: fin });
-            localStorage.setItem('jornada_registros', JSON.stringify(registros));
-            localStorage.removeItem('entrada_activa');
-            entradaActiva = null;
-            actualizarInterfaz();
-            renderizarTabla();
-        }
-		function renderizarTabla() {
-	    const tbody = document.querySelector("#tabla-registros tbody");
-	    tbody.innerHTML = "";
-	    
-	    // Configuración para que el día salga en español (ej: "lunes")
-	    const opcionesDia = { weekday: 'long' };
-	    const formateadorDia = new Intl.DateTimeFormat('es-ES', opcionesDia);
-	
-	    registros.forEach((t, i) => {
-	        const fechaEntrada = new Date(t.entrada);
-	        const nombreDia = formateadorDia.format(fechaEntrada);
-	        
-	        // 1. Detectar si es Domingo (0) o si es un Festivo (usando tu función esFestivo)
-	        const esDomingo = fechaEntrada.getDay() === 0;
-	        const festivo = esFestivo(fechaEntrada); // Asumo que tienes esta función en tu código
-	        
-	        // 2. Definir el color: Rojo si es domingo o festivo, si no, el color normal (heredado)
-	        const colorTexto = (esDomingo || festivo) ? "color: #e74c3c; font-weight: bold;" : "";
-	        
-	        let diff = (t.salida - t.entrada) / 60000;
-	        let efec = (diff >= 240 ? diff - 40 : diff) / 60;
-	
-	        // 3. Insertar en la tabla con el nuevo formato
-	        tbody.innerHTML = `<tr>
-	            <td style="${colorTexto}">
-	                <small style="display:block; text-transform: capitalize; font-size: 0.8em;">${nombreDia}</small>
-	                ${fechaEntrada.toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
-	            </td>
-	            <td>${new Date(t.salida).toLocaleString([], { hour: '2-digit', minute: '2-digit' })}</td>
-	            <td><b>${efec.toFixed(2)}h</b></td>
-	            <td><button onclick="eliminarRegistro(${i})" style="background:none; border:none; color:red; cursor:pointer; font-weight:bold;">✕</button></td>
-	        </tr>` + tbody.innerHTML;
-	    });
-	}
-		//function renderizarTabla() {
-	    //const tbody = document.querySelector("#tabla-registros tbody");
-	    //tbody.innerHTML = "";
-	    
-	    // Recorremos el historial (usamos el índice real 'i' para saber cuál borrar)
-	    //registros.forEach((t, i) => {
-	       // let diff = (t.salida - t.entrada) / 60000;
-	        //let efec = (diff >= 240 ? diff - 40 : diff) / 60;
-	        
-	        // Creamos la fila con un botón de eliminar al final
-	       // tbody.innerHTML = `<tr>
-	          //  <td>${new Date(t.entrada).toLocaleString([],{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'})}</td>
-	           // <td>${new Date(t.salida).toLocaleString([],{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'})}</td>
-	          // <td><b>${efec.toFixed(2)}h</b></td>
-	          //  <td><button onclick="eliminarRegistro(${i})" style="background:none; border:none; color:red; cursor:pointer; font-weight:bold;">✕</button></td>
-	      //  </tr>` + tbody.innerHTML; // Esto mantiene los más nuevos arriba
-	   // });
-	//}
-
-// Esta es la función nueva para borrar solo uno
-function eliminarRegistro(indice) {
-    if(confirm("¿Eliminar este turno del historial?")) {
-        registros.splice(indice, 1); // Quita el elemento en esa posición
-        localStorage.setItem('jornada_registros', JSON.stringify(registros));
-        renderizarTabla(); // Refresca la tabla
-    }
-}
-
-        //function renderizarTabla() {
-            //const tbody = document.querySelector("#tabla-registros tbody");
-            //tbody.innerHTML = "";
-            //registros.slice().reverse().forEach(t => {
-                //let diff = (t.salida - t.entrada) / 60000;
-                //let efec = (diff >= 240 ? diff - 40 : diff) / 60;
-                //tbody.innerHTML += `<tr>
-                    //<td>${new Date(t.entrada).toLocaleString([],{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'})}</td>
-                    //<td>${new Date(t.salida).toLocaleString([],{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'})}</td>
-                    //<td><b>${efec.toFixed(2)}h</b></td>
-                //</tr>`;
-            //});
-        //}
-
-        function resetearTodo() { if(confirm("¿Eliminar historial y config?")) { localStorage.clear(); location.reload(); } }
-
-        async function calcularPago() {
-            const salario = parseFloat(document.getElementById('salario').value);
-            const jornadaSem = parseInt(document.getElementById('horas-semana').value);
-            const tipoHorario = document.getElementById('tipo-horario').value;
-            const modoCalculo = document.getElementById('modo-calculo').value;
-			const descuentosFijos = parseFloat(document.getElementById('descuentos').value) || 0;
-
-            const valIn = document.getElementById('fecha-inicio').value;
-            const valOut = document.getElementById('fecha-fin').value;
-            const fIn = new Date(valIn + "T00:00:00").getTime();
-            const fOut = new Date(valOut + "T23:59:59").getTime();
-
-            if (!salario || isNaN(fIn) || isNaN(fOut)) return alert("Revisa las fechas y el salario.");
-
-            const resDiv = document.getElementById('resumen-pago');
-            resDiv.style.display = "block";
-            resDiv.innerHTML = "⌛ Procesando turnos y acumulados semanales...";
-
-            //let festivos = [];
-            try {
-                let resp = await fetch(`https://date.nager.at/api/v3/PublicHolidays/${new Date().getFullYear()}/CO`);
-                if(resp.ok) festivos = (await resp.json()).map(f => f.date);
-            } catch(e) {}
-
-            const divisor = (jornadaSem / 6) * 30;
-            const valorH = salario / divisor;
-            const umbralH = (tipoHorario === "LV") ? (jornadaSem / 5) : 8;
-            const BLOQUE = 1 / 60; 
-
-            let t = { ord:0, noc:0, fD:0, fN:0, eD:0, eN:0, efD:0, efN:0, totalEf:0 };
-
-            // 1. Ordenamos todo el historial para que la "memoria" del contador no se rompa
-            let historialOrdenado = [...registros].sort((a, b) => a.entrada - b.entrada);
-
-            // 2. Variables del Acumulador Semanal (PLC Logic)
-            let acumuladoSemanal = 0;
-            let ultimoLunes = null;
-
-            // Función para detectar cuál es el Lunes de la semana actual
-            const getLunesAct = (fecha) => {
-                let d = new Date(fecha);
-                let day = d.getDay();
-                let diff = d.getDate() - day + (day === 0 ? -6 : 1);
-                return new Date(d.setDate(diff)).toLocaleDateString('en-CA');
-            };
-
-            const ajustarReloj = (timestamp) => {
-                let d = new Date(timestamp);
-                let m = d.getMinutes();
-                if (m <= 20) d.setMinutes(0, 0, 0);
-                else if (m <= 40) d.setMinutes(30, 0, 0);
-                else d.setHours(d.getHours() + 1, 0, 0, 0);
-                return d;
-            };
-
-            historialOrdenado.forEach(turno => {
-                let dEntrada = ajustarReloj(turno.entrada);
-                let dSalida = ajustarReloj(turno.salida);
-                if (dSalida <= dEntrada) return;
-
-                let cursor = new Date(dEntrada);
-                let finT = new Date(dSalida);
-                let hEfTurno = 0;
-                let pausaOk = false;
-
-                while (cursor < finT) {
-                    // Descuento de almuerzo
-                    if (!pausaOk && hEfTurno >= 4) {
-                        cursor.setMinutes(cursor.getMinutes() + 40);
-                        pausaOk = true;
-                        if (cursor >= finT) break;
-                    }
-
-                    // BIT DE RESET: Si cambiamos de semana (Es un lunes diferente)
-                    let lunesActual = getLunesAct(cursor);
-                    if (ultimoLunes !== lunesActual) {
-                        acumuladoSemanal = 0; // Vaciamos el contador para la nueva semana
-                        ultimoLunes = lunesActual;
-                    }
-
-                    let horaActual = cursor.getHours();
-                    let esNoc = (horaActual >= 19 || horaActual < 6);
-                    let fechaIso = cursor.toLocaleDateString('en-CA');
-                    let esFest = (cursor.getDay() === 0 || festivos.includes(fechaIso));
-                    
-                    let esExtDiaria = (hEfTurno >= umbralH);
-                    let esExt = false;
-
-                    // Bandera para saber si el minuto que estamos procesando debe aparecer en tu recibo
-                    let dentroDelCorte = (cursor.getTime() >= fIn && cursor.getTime() <= fOut);
-
-                    if (esFest) {
-                        // DOMINGOS Y FESTIVOS: Solo miran el tope diario. No tocan el contador semanal.
-                        esExt = esExtDiaria;
-                        if (dentroDelCorte) {
-                            if (esExt) { esNoc ? t.efN += BLOQUE : t.efD += BLOQUE; }
-                            else { esNoc ? t.fN += BLOQUE : t.fD += BLOQUE; }
-                            t.totalEf += BLOQUE;
-                        }
-                    } else {
-                        // LUNES A SÁBADO: Es extra si se pasa del límite diario O del contador semanal
-                        esExt = (esExtDiaria || acumuladoSemanal >= jornadaSem);
-                        
-                        if (esExt) {
-                            if (dentroDelCorte) {
-                                esNoc ? t.eN += BLOQUE : t.eD += BLOQUE;
-                                t.totalEf += BLOQUE;
-                            }
-                        } else {
-                            if (dentroDelCorte) {
-                                esNoc ? t.noc += BLOQUE : t.ord += BLOQUE;
-                                t.totalEf += BLOQUE;
-                            }
-                            // Solo el tiempo ordinario suma al contador de las 42/44 horas
-                            acumuladoSemanal += BLOQUE; 
-                        }
-                    }
-
-                    hEfTurno += BLOQUE;
-                    cursor.setMinutes(cursor.getMinutes() + 1);
-                }
-            });
-
-            // --- RENDERIZADO DEL VOLANTE ---
-            const f = (v) => "$" + Math.round(v).toLocaleString('es-CO');
-            let vBase = 0;
-            let baseH = t.ord + t.noc + t.fD + t.fN;
-
-            if (modoCalculo === 'fijo') {
-                vBase = salario; 
-            } else {
-                vBase = baseH * valorH;
-            }
-
-            const conceptos = [
-                { n: "Recargo Nocturno (35%)", h: t.noc, v: t.noc * (valorH * 0.35) },
-                { n: "Recargo Festivo Diurno (1.80%)", h: t.fD, v: t.fD * (valorH * 1.80) },
-                { n: "Recargo Festivo Nocturno (110%)", h: t.fN, v: t.fN * (valorH * 1.10) },
-                { n: "Extra Diurna (1.25%)", h: t.eD, v: t.eD * (valorH * 1.25) },
-                { n: "Extra Nocturna (1.75%)", h: t.eN, v: t.eN * (valorH * 1.75) },
-                { n: "Extra Festiva Diurna (2.05%)", h: t.efD, v: t.efD * (valorH * 2.05) },
-                { n: "Extra Festiva Nocturna (2.55%)", h: t.efN, v: t.efN * (valorH * 2.55) }
-            ];
-
-            let bruto = vBase + conceptos.reduce((acc, c) => acc + c.v, 0);
-            let salud = bruto * 0.04, pen = bruto * 0.04;
-			let netoFinal = bruto - salud - pen - descuentosFijos;
-
-            let html = `
-                <div style="text-align:center; font-weight:bold; border-bottom:2px solid #1a73e8; margin-bottom:10px;">VOLANTE DETALLADO</div>
-                <div class="concepto"><span>Modalidad:</span><span><b>${modoCalculo === 'fijo' ? 'Sueldo Fijo' : 'Por Horas'}</b></span></div>
-                <div class="concepto"><span>Horas Efectivas (Corte):</span><span><b>${t.totalEf.toFixed(2)}h</b></span></div>
-                <div class="concepto"><span>${modoCalculo === 'fijo' ? 'Sueldo Base' : 'Sueldo Ordinario ('+baseH.toFixed(2)+'h)'}</span><span>${f(vBase)}</span></div>
-            `;
-            conceptos.forEach(c => {
-                if (c.h > 0) html += `<div class="concepto" style="color:#28a745"><span>${c.n} (${c.h.toFixed(2)}h)</span><span>+ ${f(c.v)}</span></div>`;
-            });
-            html += `
-                <div style="margin-top:10px; border-top:1px solid #eee;">
-                    <div class="concepto" style="color:#c0392b"><span>Salud (4%)</span><span>- ${f(salud)}</span></div>
-                    <div class="concepto" style="color:#c0392b"><span>Pensión (4%)</span><span>- ${f(pen)}</span></div>`;
-                if (descuentosFijos > 0) {
-	        html += `<div class="concepto" style="color:#c0392b"><span>Descuentos Fijos</span><span>- ${f(descuentosFijos)}</span></div>`;
-	    		}
-		    html += `
-		        </div>
-		        <div class="concepto total"><span>NETO A RECIBIR:</span><span>${f(netoFinal)}</span></div>`;
-		    resDiv.innerHTML = html;
-		}// <--- Esta es la llave que cierra calcularPago
-		if ("serviceWorker" in navigator) {
-	    navigator.serviceWorker.register("sw.js").then(reg => {
-	        reg.onupdatefound = () => {
-	            const installingWorker = reg.installing;
-	            installingWorker.onstatechange = () => {
-	                if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
-	                    if (confirm("Hay una nueva versión disponible. ¿Deseas actualizar ahora?")) {
-	                        location.reload();
-	                    }
-	                }
-	            };
-	        };
-	    });
-	}
-	//if ("serviceWorker" in navigator) {
-    		//navigator.serviceWorker.register("sw.js")
-    		//.then(() => console.log("Service Worker registrado"))
-    		//.catch(err => console.log("Error:", err));
-	//}
-		function importarHistorial(event) {
-	    const archivo = event.target.files[0];
-	    if (!archivo) return;
-	
-	    const lector = new FileReader();
-	    lector.onload = function(e) {
-	        const contenido = e.target.result;
-	        const lineas = contenido.split("\n");
-	        const nuevosRegistros = [];
-	
-	        // Empezamos en 1 para saltar el encabezado (Entrada, Salida)
-	        for (let i = 1; i < lineas.length; i++) {
-	            if (lineas[i].trim() === "") continue;
-	            const columnas = lineas[i].split(",");
-	            if (columnas.length >= 2) {
-	                nuevosRegistros.push({
-	                    entrada: new Date(columnas[0]).getTime(),
-	                    salida: new Date(columnas[1]).getTime()
-	                });
-	            }
-	        }
-	
-	        if (nuevosRegistros.length > 0) {
-	            if (confirm(`Se encontraron ${nuevosRegistros.length} turnos. ¿Deseas cargarlos?`)) {
-	                // Unimos lo que ya hay con lo nuevo y ordenamos
-	                registros = [...registros, ...nuevosRegistros];
-	                registros.sort((a, b) => a.entrada - b.entrada);
-	                localStorage.setItem('jornada_registros', JSON.stringify(registros));
-	                renderizarTabla();
-	                alert("✅ Datos importados con éxito.");
-	            }
-	        } else {
-	            alert("❌ El archivo no tiene el formato correcto.");
-	        }
-	    };
-	    lector.readAsText(archivo);
-	}
-		// Exporta el historial a un archivo de texto (JSON) que Excel puede abrir o puedes guardar como backup
-function exportarHistorial() {
-    if (registros.length === 0) return alert("No hay datos para exportar.");
-    
-    // Encabezados del CSV
-    let csvContent = "Entrada,Salida\n";
-    
-    // Convertir cada registro a una línea de texto legible
-    registros.forEach(t => {
-        let entradaStr = new Date(t.entrada).toLocaleString('sv-SE').replace(' ', 'T');
-        let salidaStr = new Date(t.salida).toLocaleString('sv-SE').replace(' ', 'T');
-        csvContent += `${entradaStr},${salidaStr}\n`;
-    });
-
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.setAttribute("href", url);
-    link.setAttribute("download", "nomina_editable.csv");
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-}
-// Mostrar/Ocultar el panel manual
-        function toggleManual() {
-            const form = document.getElementById('form-manual');
-            form.style.display = form.style.display === 'block' ? 'none' : 'block';
-        }
-
-        // Validar y guardar el turno inyectado
-        function guardarTurnoManual() {
-            const valIn = document.getElementById('manual-in').value;
-            const valOut = document.getElementById('manual-out').value;
-
-            if (!valIn || !valOut) return alert("⚠️ Por favor selecciona la fecha y hora de Entrada y Salida.");
-
-            const tIn = new Date(valIn).getTime();
-            const tOut = new Date(valOut).getTime();
-
-            if (tOut <= tIn) return alert("❌ Error cronológico: La Salida no puede ser anterior o igual a la Entrada.");
-
-            // Inyectar al array
-            registros.push({ entrada: tIn, salida: tOut });
-            
-            // Ordenar el historial automáticamente para que los turnos viejos queden en su lugar correcto
-            registros.sort((a, b) => a.entrada - b.entrada);
-
-            // Guardar en memoria persistente
-            localStorage.setItem('jornada_registros', JSON.stringify(registros));
-            
-            // Actualizar la interfaz
-            renderizarTabla();
-            toggleManual(); 
-            
-            // Limpiar los campos para el próximo uso
-            document.getElementById('manual-in').value = '';
-            document.getElementById('manual-out').value = '';
-            
-            alert("✅ Turno agregado al historial exitosamente.");
-        }
-    </script>
+    <script src="js/storage.js"></script>
+    <script src="js/holidays.js"></script>
+    <script src="js/payroll.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/app.js"></script>
 </body>
-</html>
