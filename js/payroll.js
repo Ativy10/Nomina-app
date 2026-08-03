@@ -23,7 +23,7 @@
         return lunes.toLocaleDateString('en-CA');
     }
 
-    function calcularPago({ registros, salario, jornadaSem, tipoHorario, modoCalculo, descuentosFijos, fechaInicio, fechaFin, festivos, tasas }) {
+    function calcularPago({ registros, salario, jornadaSem, tipoHorario, modoCalculo, descuentosFijos, fechaInicio, fechaFin, festivos, tasas, tiempoDescanso }) {
         const fIn = new Date(fechaInicio + 'T00:00:00').getTime();
         const fOut = new Date(fechaFin + 'T23:59:59').getTime();
 
@@ -62,7 +62,7 @@
 
             while (cursor < finT) {
                 if (!pausaActiva && horasTurno >= 4) {
-                    cursor.setMinutes(cursor.getMinutes() + 40);
+                    cursor.setMinutes(cursor.getMinutes() + tiempoDescanso);
                     pausaActiva = true;
                     if (cursor >= finT) break;
                 }

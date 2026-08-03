@@ -12,13 +12,43 @@
         <header class="app-header">
             <h2>⏱️ Mi Control de Nómina</h2>
 
-            <nav class="main-nav" aria-label="Menú principal">
-                <button class="nav-btn active" type="button" data-view="home">Inicio</button>
-                <button class="nav-btn" type="button" data-view="config">Configuración</button>
-                <button class="nav-btn" type="button" data-view="history">Historial</button>
-                <button class="nav-btn" type="button" data-view="report">Reporte</button>
-                <button class="nav-btn" type="button" data-view="settings">Ajustes</button>
-            </nav>
+            <!-- Reemplazo de la navegación principal -->
+<nav class="navigation">
+    <ul>
+        <li class="list active" data-view="home">
+            <a href="#">
+                <span class="icon">🏠</span>
+                <span class="text">Inicio</span>
+            </a>
+        </li>
+        <li class="list" data-view="config">
+            <a href="#">
+                <span class="icon">⚙️</span>
+                <span class="text">Config</span>
+            </a>
+        </li>
+        <li class="list" data-view="history">
+            <a href="#">
+                <span class="icon">📅</span>
+                <span class="text">Historial</span>
+            </a>
+        </li>
+        <li class="list" data-view="report">
+            <a href="#">
+                <span class="icon">📄</span>
+                <span class="text">Reporte</span>
+            </a>
+        </li>
+        <li class="list" data-view="settings">
+            <a href="#">
+                <span class="icon">🛠️</span>
+                <span class="text">Ajustes</span>
+            </a>
+        </li>
+        <!-- Indicador circular flotante que se moverá con CSS -->
+        <div class="indicator"></div>
+    </ul>
+</nav>
         </header>
 
         <main class="main-content">
@@ -84,6 +114,12 @@
                         <div>
                             <label for="fecha-fin">Fecha Fin Corte:</label>
                             <input type="date" id="fecha-fin" class="save-cfg">
+                        </div>
+                    </div>
+                    <div class="fila-doble">
+                        <div>
+                            <label for="Tiempo-descanso">Tiempo de Descanso (minutos):</label>
+                            <input type="number" id="Tiempo-descanso" class="save-cfg" value="30">
                         </div>
                     </div>
 

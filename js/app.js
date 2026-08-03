@@ -15,18 +15,23 @@
     }
 
     function setActiveView(viewName) {
+        // Alternar visibilidad de las secciones
         document.querySelectorAll('.view').forEach((section) => {
             section.classList.toggle('active', section.id === 'view-' + viewName);
         });
 
-        document.querySelectorAll('.nav-btn').forEach((btn) => {
-            btn.classList.toggle('active', btn.dataset.view === viewName);
+        // Actualizar la clase active en los li del Magic Menu para que se mueva el círculo
+        document.querySelectorAll('.navigation .list').forEach((item) => {
+            item.classList.toggle('active', item.dataset.view === viewName);
         });
     }
 
     function bindNavigation() {
-        document.querySelectorAll('.nav-btn').forEach((button) => {
-            button.addEventListener('click', () => setActiveView(button.dataset.view));
+        document.querySelectorAll('.navigation .list').forEach((item) => {
+            item.addEventListener('click', (e) => {
+                e.preventDefault(); // Evita el salto de pantalla del <a>
+                setActiveView(item.dataset.view);
+            });
         });
     }
 
@@ -111,6 +116,8 @@
             fechaInicio: document.getElementById('fecha-inicio').value,
             fechaFin: document.getElementById('fecha-fin').value,
 
+            tiempoDescanso: parseInt(document.getElementById('Tiempo-descanso')?.value, 10) || 30,
+
             tasas:{
                 noc: leerPorcentaje('recargoNocturno', 0.35),
                 fD:  leerPorcentaje('recargoFestivoDiurno', 1.80),
@@ -125,7 +132,7 @@
 
     async function calcularPago() {
         const config = obtenerConfiguracion();
-        const { salario, jornadaSem, tipoHorario, modoCalculo, descuentosFijos, tasas } = config;
+        const { salario, jornadaSem, tipoHorario, modoCalculo, descuentosFijos, tasas, tiempoDescanso } = config;
 
         if (!salario || !config.fechaInicio || !config.fechaFin) {
             alert('Revisa las fechas y el salario.');
@@ -150,7 +157,8 @@
             fechaInicio: config.fechaInicio,
             fechaFin: config.fechaFin,
             festivos: state.festivos,
-            tasas
+            tasas,
+            tiempoDescanso
         });
 
         UI.renderResumenPago(resultado.html);

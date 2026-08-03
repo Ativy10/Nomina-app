@@ -251,3 +251,128 @@ th, td {
         grid-template-columns: 1fr;
     }
 }
+/* ==========================================
+   MAGIC NAVIGATION MENU
+   ========================================== */
+.navigation {
+    position: relative;
+    width: 350px;
+    height: 70px;
+    background: #fff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 10px;
+    margin: 10px auto;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
+.navigation ul {
+    display: flex;
+    width: 350px;
+    padding: 0;
+    margin: 0;
+}
+
+.navigation ul li {
+    position: relative;
+    list-style: none;
+    width: 70px;
+    height: 70px;
+    z-index: 1;
+}
+
+.navigation ul li a {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    width: 100%;
+    text-align: center;
+    font-weight: 500;
+    text-decoration: none;
+}
+
+.navigation ul li a .icon {
+    position: relative;
+    display: block;
+    line-height: 75px;
+    font-size: 1.5em;
+    text-align: center;
+    transition: 0.5s;
+    color: #222;
+}
+
+.navigation ul li.active a .icon {
+    transform: translateY(18px);
+    color: #fff;
+}
+
+.navigation ul li a .text {
+    position: absolute;
+    top: 6px; /* Posición del texto */
+    color: #222;
+    font-weight: 600;
+    font-size: 0.72em;
+    letter-spacing: 0.05em;
+    transition: 0.5s;
+    opacity: 0;
+    transform: translateY(10px);
+}
+
+.navigation ul li.active a .text {
+    opacity: 1;
+    transform: translateY(0px);
+}
+
+/* Indicador flotante circular */
+/* CÍRCULO INDICADOR */
+/* ==========================================
+   INDICADOR Y CURVAS (Alineado y sin "cuernos")
+   ========================================== */
+
+.indicator {
+    position: absolute;
+    top: 22px; /* Altura centrada en la parte baja */
+    width: 70px; /* Mismo ancho que los <li> para alineación perfecta */
+    height: 70px;
+    background: #1a73e8; /* Color verde del botón activo */
+    border-radius: 50%;
+    border: 6px solid #f4f4f9; /* Color del fondo exterior de la pantalla */
+    transition: 0.5s;
+    box-sizing: border-box;
+}
+
+/* Curva ahuecada IZQUIERDA */
+.indicator::before {
+    content: '';
+    position: absolute;
+    top: 23px;
+    left: -17px;
+    width: 10px;
+    height: 25px;
+    background: transparent;
+    border-bottom-right-radius: 20px;
+    box-shadow: 6px 6px 0 0 #f4f4f9; /* Abraza el círculo desde la barra blanca */
+}
+
+/* Curva ahuecada DERECHA */
+.indicator::after {
+    content: '';
+    position: absolute;
+    top: 23px;
+    right: -17px;
+    width: 10px;
+    height: 25px;
+    background: transparent;
+    border-bottom-left-radius: 20px;
+    box-shadow: -6px 6px 0 0 #f4f4f9; /* Abraza el círculo desde la barra blanca */
+}
+
+/* Posiciones dinámicas según la opción seleccionada */
+.navigation ul li:nth-child(1).active ~ .indicator { transform: translateX(calc(70px * 0)); }
+.navigation ul li:nth-child(2).active ~ .indicator { transform: translateX(calc(70px * 1)); }
+.navigation ul li:nth-child(3).active ~ .indicator { transform: translateX(calc(70px * 2)); }
+.navigation ul li:nth-child(4).active ~ .indicator { transform: translateX(calc(70px * 3)); }
+.navigation ul li:nth-child(5).active ~ .indicator { transform: translateX(calc(70px * 4)); }
