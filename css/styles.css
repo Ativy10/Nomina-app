@@ -293,6 +293,10 @@ th, td {
     text-align: center;
     font-weight: 500;
     text-decoration: none;
+
+    /* Elimina el resaltado azul al tocar en móviles */
+    -webkit-tap-highlight-color: transparent;
+    outline: none;
 }
 
 .navigation ul li a .icon {
