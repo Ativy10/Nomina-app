@@ -278,7 +278,7 @@ th, td {
 .navigation ul li {
     position: relative;
     list-style: none;
-    width: 70px;
+    width: 20%;
     height: 70px;
     z-index: 1;
 }
@@ -336,7 +336,7 @@ th, td {
 .indicator {
     position: absolute;
     top: 22px; /* Altura centrada en la parte baja */
-    width: 70px; /* Mismo ancho que los <li> para alineación perfecta */
+    width: 20%; /* Mismo ancho que los <li> para alineación perfecta */
     height: 70px;
     background: #1a73e8; /* Color verde del botón activo */
     border-radius: 50%;
@@ -372,8 +372,22 @@ th, td {
 }
 
 /* Posiciones dinámicas según la opción seleccionada */
-.navigation ul li:nth-child(1).active ~ .indicator { transform: translateX(calc(70px * 0)); }
-.navigation ul li:nth-child(2).active ~ .indicator { transform: translateX(calc(70px * 1)); }
-.navigation ul li:nth-child(3).active ~ .indicator { transform: translateX(calc(70px * 2)); }
-.navigation ul li:nth-child(4).active ~ .indicator { transform: translateX(calc(70px * 3)); }
-.navigation ul li:nth-child(5).active ~ .indicator { transform: translateX(calc(70px * 4)); }
+.navigation ul li:nth-child(1).active ~ .indicator {
+    left: 0%;
+}
+
+.navigation ul li:nth-child(2).active ~ .indicator {
+    left: 20%;
+}
+
+.navigation ul li:nth-child(3).active ~ .indicator {
+    left: 40%;
+}
+
+.navigation ul li:nth-child(4).active ~ .indicator {
+    left: 60%;
+}
+
+.navigation ul li:nth-child(5).active ~ .indicator {
+    left: 80%;
+}
