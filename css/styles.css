@@ -311,7 +311,7 @@ th, td {
 
 
 .navigation ul li.active a .icon {
-    transform: translateY(18px);
+    transform: translateY(50%);
     color: #fff;
 }
 
