@@ -340,7 +340,7 @@ th, td {
 
 .indicator {
     position: absolute;
-    top: 30%; /* Altura centrada en la parte baja */
+    top: 35%; /* Altura centrada en la parte baja */
     width: 20%; /* Mismo ancho que los <li> para alineación perfecta */
     max-width: 70px;
     aspect-ratio: 1 / 1;
