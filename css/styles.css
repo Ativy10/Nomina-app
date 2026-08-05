@@ -340,12 +340,12 @@ th, td {
 
 .indicator {
     position: absolute;
-    top: 22px; /* Altura centrada en la parte baja */
+    top: 20%; /* Altura centrada en la parte baja */
     width: 20%; /* Mismo ancho que los <li> para alineación perfecta */
     max-width: 70px;
     aspect-ratio: 1 / 1;
     height: auto;
-    background: #1a73e8; /* Color verde del botón activo */
+    background: #1a73e8; /* Color azul del botón activo */
     border-radius: 50%;
     border: 6px solid #f4f4f9; /* Color del fondo exterior de la pantalla */
     transition: 0.5s;
