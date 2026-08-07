@@ -309,9 +309,13 @@ th, td {
     color: #222;
 }
 
+.navigation ul li a .icon img{
+    width:25px;
+    height:25px;
+}
 
 .navigation ul li.active a .icon {
-    transform: translateY(25%);
+    transform: translateY(30%);
     color: #fff;
 }
 
@@ -340,7 +344,7 @@ th, td {
 
 .indicator {
     position: absolute;
-    top: 35%; /* Altura centrada en la parte baja */
+    top: 30%; /* Altura centrada en la parte baja */
     width: 20%; /* Mismo ancho que los <li> para alineación perfecta */
     max-width: 70px;
     aspect-ratio: 1 / 1;
