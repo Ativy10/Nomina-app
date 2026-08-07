@@ -283,16 +283,16 @@
                 installingWorker.onstatechange = () => {
                     if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
                         if (confirm('Hay una nueva versión disponible. ¿Deseas actualizar ahora?')) {
-                            //window.location.reload();
-                            installingWorker.postMessage('SKIP_WAITING');
+                            window.location.reload();
+                            //installingWorker.postMessage('SKIP_WAITING');
                         }
                     }
                 };
             };
             // <-- ESTE ES EL BLOQUE NUEVO
-            navigator.serviceWorker.addEventListener('controllerchange', () => {
-                window.location.reload();
-            });
+            //navigator.serviceWorker.addEventListener('controllerchange', () => {
+            //    window.location.reload();
+            //});
         }).catch((error) => {
             console.log('Error al registrar el Service Worker:', error);
         });
