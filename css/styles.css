@@ -251,6 +251,33 @@ th, td {
         grid-template-columns: 1fr;
     }
 }
+/* Ajustes para la barra del historial en móviles */
+@media (max-width: 480px) {
+    .top-bar {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+    }
+
+    .top-bar h3 {
+        text-align: left; /* Alinea el título a la izquierda */
+    }
+
+    .top-bar-actions {
+        display: grid;
+        grid-template-columns: 1.2fr 1fr 1fr; /* Le da un poco más de espacio al botón "Manual" */
+        gap: 6px;
+        width: 100%;
+    }
+
+    .top-bar-actions button {
+        width: 100%;
+        padding: 8px 4px;
+        font-size: 11px;
+        text-align: center;
+        white-space: nowrap; /* Evita saltos de línea dentro de los botones */
+    }
+}
 /* ==========================================
    MAGIC NAVIGATION MENU
    ========================================== */
@@ -362,7 +389,7 @@ th, td {
 }
 
 /* Curva ahuecada IZQUIERDA */
-.indicator::before {
+/*.indicator::before {
     content: '';
     position: absolute;
     top: 23px;
@@ -371,10 +398,10 @@ th, td {
     height: 25px;
     background: transparent;
     border-bottom-right-radius: 20px;
-    box-shadow: 6px 6px 0 0 #f4f4f9; /* Abraza el círculo desde la barra blanca */
+    box-shadow: 6px 6px 0 0 #f4f4f9; /* Abraza el círculo desde la barra blanca 
 }
 
-/* Curva ahuecada DERECHA */
+/* Curva ahuecada DERECHA
 .indicator::after {
     content: '';
     position: absolute;
@@ -384,8 +411,8 @@ th, td {
     height: 25px;
     background: transparent;
     border-bottom-left-radius: 20px;
-    box-shadow: -6px 6px 0 0 #f4f4f9; /* Abraza el círculo desde la barra blanca */
-}
+    box-shadow: -6px 6px 0 0 #f4f4f9; /* Abraza el círculo desde la barra blanca 
+}*/
 
 /* Posiciones dinámicas según la opción seleccionada */
 .navigation ul li:nth-child(1).active ~ .indicator {
