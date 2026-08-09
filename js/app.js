@@ -316,15 +316,27 @@
     }
 
     async function init() {
-        bindNavigation();
-        bindConfigPersist();
-        bindEvents();
-        await cargarFestivos();
-        setActiveView('home');
-        UI.actualizarInterfaz(state.entradaActiva);
-        UI.renderizarTabla(state.registros, state.festivos);
-        registrarServiceWorker();
-    }
+    bindNavigation();
+    bindConfigPersist();
+    bindEvents();
+    
+    // Cargar festivos locales primero para renderizar de inmediato
+    state.festivos = holidays.getLocalFestivos();
+    
+    setActiveView('home');
+    UI.actualizarInterfaz(state.entradaActiva);
+    UI.renderizarTabla(state.registros, state.festivos);
+    
+    // Validar en segundo plano si hay cambios online
+    holidays.loadFestivos().then((nuevosFestivos) => {
+        if (JSON.stringify(state.festivos) !== JSON.stringify(nuevosFestivos)) {
+            state.festivos = nuevosFestivos;
+            UI.renderizarTabla(state.registros, state.festivos);
+        }
+    });
+
+    registrarServiceWorker();
+}
 
     document.addEventListener('DOMContentLoaded', init);
 })();
