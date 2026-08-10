@@ -3,13 +3,13 @@
         const fecha = new Date(timestamp);
         const minutos = fecha.getMinutes();
 
-        if (minutos <= 20) {
+        /*if (minutos <= 20) {
             fecha.setMinutes(0, 0, 0);
         } else if (minutos <= 40) {
             fecha.setMinutes(30, 0, 0);
         } else {
             fecha.setHours(fecha.getHours() + 1, 0, 0, 0);
-        }
+        }*/
 
         return fecha;
     }
@@ -29,7 +29,8 @@
 
         const divisor = (jornadaSem / 6) * 30;
         const valorHora = salario / divisor;
-        const umbralHora = (tipoHorario === 'LV') ? (jornadaSem / 5) : 8;
+        /*const umbralHora = (tipoHorario === 'LV') ? (jornadaSem / 5) : 6;*/
+        const umbralHora = tipoHorario === 'LV'? jornadaSem / 5 : jornadaSem / 6;
         const BLOQUE = 1 / 60;
 
         const acumulador = {
@@ -46,6 +47,7 @@
 
         let acumuladoSemanal = 0;
         let ultimoLunes = null;
+        let festivosAcumulados = new Set();
 
         const historialOrdenado = [...registros].sort((a, b) => a.entrada - b.entrada);
 
@@ -71,12 +73,34 @@
                 if (ultimoLunes !== lunesActual) {
                     acumuladoSemanal = 0;
                     ultimoLunes = lunesActual;
+
+                    const diasDistribucion = tipoHorario === 'LV' ? 5 : 6;
+                    const horasPorDiaFestivo = jornadaSem / diasDistribucion;
+
+                    const [yr, mo, dy] = lunesActual.split('-').map(Number);
+
+                    for (let i = 0; i < 7; i++) {
+                        const diaTemp = new Date(yr, mo - 1, dy + i);
+                        const dSem = diaTemp.getDay();
+
+                        const esDiaDistribuido = tipoHorario === 'LV'
+                            ? (dSem >= 1 && dSem <= 5)
+                            : (dSem >= 1 && dSem <= 6);
+
+                        const isoFecha =
+                            `${diaTemp.getFullYear()}-${String(diaTemp.getMonth() + 1).padStart(2, '0')}-${String(diaTemp.getDate()).padStart(2, '0')}`;
+
+                        if (esDiaDistribuido && festivos.includes(isoFecha)) {
+                            acumuladoSemanal += horasPorDiaFestivo;
+                        }
+                    }
                 }
 
                 const horaActual = cursor.getHours();
                 const esNoche = (horaActual >= 19 || horaActual < 6);
                 const fechaIso = cursor.toLocaleDateString('en-CA');
                 const esFestivoDia = (cursor.getDay() === 0 || festivos.includes(fechaIso));
+                const diaSemana = cursor.getDay();
                 const esExtraDiaria = (horasTurno >= umbralHora);
                 const dentroDelCorte = (cursor.getTime() >= fIn && cursor.getTime() <= fOut);
 
@@ -94,6 +118,7 @@
                     }
                 } else {
                     esExtra = (esExtraDiaria || acumuladoSemanal >= jornadaSem);
+                    /*esExtra = acumuladoSemanal >= jornadaSem;*/
 
                     if (esExtra) {
                         if (dentroDelCorte) {

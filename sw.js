@@ -1,4 +1,4 @@
-const CACHE_NAME = 'jornada-v3.1.5';
+const CACHE_NAME = 'jornada-v3.2.1';
 const APP_SHELL = [
   './',
   './index.html',
