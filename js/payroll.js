@@ -102,7 +102,10 @@
                 const esFestivoDia = (cursor.getDay() === 0 || festivos.includes(fechaIso));
                 const diaSemana = cursor.getDay();
                 const esExtraDiaria = (horasTurno >= umbralHora);
-                const dentroDelCorte = (cursor.getTime() >= fIn && cursor.getTime() <= fOut);
+                //const dentroDelCorte = (cursor.getTime() >= fIn && cursor.getTime() <= fOut) || turnoEnCorte;
+                const entroEnElCorte = (dEntrada.getTime() >= fIn && dEntrada.getTime() <= fOut);
+                const minutoEnCorte = (cursor.getTime() >= fIn && cursor.getTime() <= fOut);
+                const dentroDelCorte = minutoEnCorte || entroEnElCorte;
 
                 let esExtra = false;
 
